@@ -233,7 +233,7 @@
         <Option name="STYLE" type="List">
           <Option type="Map">
             <Option name="source" type="int" value="2"/>
-            <Option name="static_value" type="QString" value="Q:\BGER\PER\RPRT\ryan-tools\QGIS-Styles\TUFLOW\2d_loc_v2.qml"/>
+            <Option name="static_value" type="QString" value="Q:\BGER\PER\RPRT\ryan-tools\qgis-resources\styles\TUFLOW\2d_loc_v2.qml"/>
           </Option>
         </Option>
       </Option>
