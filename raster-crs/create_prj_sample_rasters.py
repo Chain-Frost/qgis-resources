@@ -4,7 +4,7 @@
 # pyright: reportMissingTypeStubs=false, reportUnknownArgumentType=false
 # pyright: reportUnknownMemberType=false, reportUnknownVariableType=false
 
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 from collections.abc import Iterable
 from pathlib import Path
 
@@ -42,13 +42,13 @@ def create_sample(prj_path: PathInput, output_dir: Path = DEFAULT_OUTPUT_DIR) ->
     output_path: Path = output_dir / f"crs_{source_path.stem}.tif"
 
     transform = from_origin(
-        -PIXEL_SIZE / 2,
-        PIXEL_SIZE / 2,
-        PIXEL_SIZE,
-        PIXEL_SIZE,
+        west=-PIXEL_SIZE / 2,
+        north=PIXEL_SIZE / 2,
+        xsize=PIXEL_SIZE,
+        ysize=PIXEL_SIZE,
     )
     with rasterio.open(
-        output_path,
+        fp=output_path,
         mode="w",
         driver="GTiff",
         width=1,
@@ -59,7 +59,7 @@ def create_sample(prj_path: PathInput, output_dir: Path = DEFAULT_OUTPUT_DIR) ->
         transform=transform,
         compress="deflate",
     ) as dataset:
-        dataset.write(np.zeros((1, 1, 1), dtype=np.float32))
+        dataset.write(np.zeros(shape=(1, 1, 1), dtype=np.float32))
 
     return output_path
 
@@ -90,7 +90,7 @@ def parse_args() -> tuple[PathInput | Iterable[PathInput], Path]:
         default=DEFAULT_OUTPUT_DIR,
         help=f"Output directory (default: {DEFAULT_OUTPUT_DIR})",
     )
-    arguments = parser.parse_args()
+    arguments: Namespace = parser.parse_args()
     return arguments.prj_paths or PRJ_PATHS, arguments.output_dir
 
 

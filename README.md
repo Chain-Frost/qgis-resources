@@ -9,7 +9,8 @@ checked out at `qgis-resources/` as a submodule of that repository.
 ## Layout
 
 - `styles/`: QML styles, QPT layouts, and supporting spatial assets.
-- `processing-models/`: QGIS processing models and the workbooks required to prepare their inputs.
+- `processing-models/`: QGIS processing models and the workbooks required to prepare their inputs. The
+  [TUFLOW model notes](processing-models/tuflow/README.md) describe the culvert workbook and its generated tables.
 - `scripts/`: scripts intended to run from the QGIS Python console or a configured PyQGIS environment.
 
 Workbooks are managed with Git LFS. Install Git LFS before cloning directly:

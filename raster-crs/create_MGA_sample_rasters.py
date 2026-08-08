@@ -11,24 +11,22 @@ import rasterio
 from pyproj import Transformer
 from rasterio.transform import from_origin
 
-OUTPUT_DIR = Path(__file__).parent / "crs_samples"
-LATITUDE = -26.0
+OUTPUT_DIR: Path = Path(__file__).parent / "crs_samples"
+LATITUDE: float = -26.0
 EASTING = 500_000.0
 PIXEL_SIZE = 1.0
 
 
 def create_sample(epsg: int, datum: str, zone: int) -> Path:
     # At a UTM/MGA zone's central meridian, longitude is 6 * zone - 183.
-    longitude = 6 * zone - 183
-    transformer = Transformer.from_crs(4326, epsg, always_xy=True)
+    longitude: int = 6 * zone - 183
+    transformer: Transformer = Transformer.from_crs(4326, epsg, always_xy=True)
     projected_easting, northing = transformer.transform(longitude, LATITUDE)
 
     if abs(projected_easting - EASTING) > 0.001:
-        raise ValueError(
-            f"EPSG:{epsg} produced unexpected easting {projected_easting:.3f} m"
-        )
+        raise ValueError(f"EPSG:{epsg} produced unexpected easting {projected_easting:.3f} m")
 
-    path = OUTPUT_DIR / f"crs_{datum}_MGA_zone{zone}_EPSG{epsg}.tif"
+    path: Path = OUTPUT_DIR / f"crs_{datum}_MGA_zone{zone}_EPSG{epsg}.tif"
     transform = from_origin(
         EASTING - PIXEL_SIZE / 2,
         northing + PIXEL_SIZE / 2,
@@ -37,8 +35,8 @@ def create_sample(epsg: int, datum: str, zone: int) -> Path:
     )
 
     with rasterio.open(
-        path,
-        "w",
+        fp=path,
+        mode="w",
         driver="GTiff",
         width=1,
         height=1,
@@ -55,7 +53,7 @@ def create_sample(epsg: int, datum: str, zone: int) -> Path:
 
 def main() -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    definitions = [(epsg, "GDA94", epsg - 28300) for epsg in range(28349, 28357)] + [
+    definitions: list[tuple[int, str, int]] = [(epsg, "GDA94", epsg - 28300) for epsg in range(28349, 28357)] + [
         (epsg, "GDA2020", epsg - 7800) for epsg in range(7849, 7857)
     ]
 
