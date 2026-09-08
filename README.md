@@ -25,3 +25,7 @@ When working through `ryan-tools`, initialise the checkout with:
 ```powershell
 git submodule update --init qgis-resources
 ```
+
+## License
+
+This repository is licensed under the [Sustainable Use License v1.0](LICENSE) (`SUL-1.0`).
