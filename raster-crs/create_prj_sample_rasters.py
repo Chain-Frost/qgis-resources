@@ -16,7 +16,7 @@ from rasterio.transform import from_origin
 type PathInput = str | Path
 
 # Set this to either one PRJ path or a list of PRJ paths.
-PRJ_PATHS: PathInput | list[PathInput] = [r"C:\path\Local_Grid.prj"]
+PRJ_PATHS: list[PathInput] = [r"C:\path\Local_Grid.prj"]
 
 DEFAULT_OUTPUT_DIR: Path = Path(__file__).parent / "crs_samples"
 PIXEL_SIZE = 1.0
