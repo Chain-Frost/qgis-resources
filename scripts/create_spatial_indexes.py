@@ -38,7 +38,7 @@ def index_layers(
     dry_run: bool = DEFAULT_DRY_RUN,
 ) -> tuple[int, int, int]:
     """Return (indexed-or-planned, skipped, failed); skip existing shapefile QIX."""
-    from qgis.core import QgsVectorDataProvider
+    from qgis.core import Qgis
 
     created = skipped = failed = 0
     for layer in layers:
@@ -51,7 +51,7 @@ def index_layers(
             skipped += 1
             continue
         provider = layer.dataProvider()
-        if provider is None or not provider.capabilities() & QgsVectorDataProvider.CreateSpatialIndex:
+        if provider is None or not provider.capabilities() & Qgis.VectorProviderCapability.CreateSpatialIndex:
             print(f"SKIP no index capability: {layer.name()}")
             skipped += 1
             continue
