@@ -17,8 +17,8 @@ def tools(monkeypatch: pytest.MonkeyPatch) -> tuple[ModuleType, ModuleType]:
     qgis = ModuleType("qgis")
     qgis.__path__ = []  # type: ignore[attr-defined]
     core = ModuleType("qgis.core")
-    provider = type("QgsVectorDataProvider", (), {"CreateSpatialIndex": 8})
-    core.QgsVectorDataProvider = provider  # type: ignore[attr-defined]
+    capability = type("VectorProviderCapability", (), {"CreateSpatialIndex": 64})
+    core.Qgis = type("Qgis", (), {"VectorProviderCapability": capability})  # type: ignore[attr-defined]
     monkeypatch.setitem(sys.modules, "qgis", qgis)
     monkeypatch.setitem(sys.modules, "qgis.core", core)
     folder = Path(__file__).absolute().parents[1]
@@ -42,7 +42,7 @@ class FakeField:
 
 
 class FakeProvider:
-    def __init__(self, *, capabilities: int = 8, works: bool = True) -> None:
+    def __init__(self, *, capabilities: int = 64, works: bool = True) -> None:
         self._capabilities = capabilities
         self.works = works
         self.index_calls = 0
