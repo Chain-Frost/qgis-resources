@@ -72,11 +72,15 @@ def index_layers(
 def main() -> None:
     """Use all project layers or only the current QGIS selection."""
     from qgis.core import QgsProject, QgsVectorLayer
+    from qgis.utils import iface as qgis_iface
 
+    if not DEFAULT_ALL_PROJECT_LAYERS and qgis_iface is None:
+        message = "QGIS GUI session is required for selecting layers"
+        raise RuntimeError(message)
     source = (
         QgsProject.instance().mapLayers().values()
         if DEFAULT_ALL_PROJECT_LAYERS
-        else iface.layerTreeView().selectedLayers()  # noqa: F821
+        else qgis_iface.layerTreeView().selectedLayers()
     )
     index_layers(
         (layer for layer in source if isinstance(layer, QgsVectorLayer)),
