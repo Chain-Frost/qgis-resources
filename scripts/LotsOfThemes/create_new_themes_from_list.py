@@ -61,9 +61,7 @@ def _find_layer(project: QgsProject, name: str) -> QgsMapLayer:
     return matches[0]
 
 
-def _create_theme(
-    project: QgsProject, base_layer_ids: set[str], target_id: str
-) -> object:
+def _create_theme(project: QgsProject, base_layer_ids: set[str], target_id: str) -> object:
     root = project.layerTreeRoot()
     nodes = list(_iter_nodes(root))
     original = [(node, node.itemVisibilityChecked()) for node in nodes]
@@ -109,8 +107,7 @@ def build_output_rows(themes: list[str]) -> list[dict[str, str | int]]:
         message = "Duplicate theme names are not valid atlas identifiers"
         raise ValueError(message)
     return [
-        {"theme_name": name, "out_name": f"{index:05d}", **_name_metadata(name)}
-        for index, name in enumerate(ordered)
+        {"theme_name": name, "out_name": f"{index:05d}", **_name_metadata(name)} for index, name in enumerate(ordered)
     ]
 
 
@@ -143,8 +140,7 @@ def _atlas_geometry(layer: QgsVectorLayer) -> QgsGeometry:
 
 
 def _write_atlas(
-    project: QgsProject, point_layer_name: str, output: Path,
-    rows: list[dict[str, str | int]], *, overwrite: bool
+    project: QgsProject, point_layer_name: str, output: Path, rows: list[dict[str, str | int]], *, overwrite: bool
 ) -> None:
     """Create one point feature per theme, using the first source point geometry."""
     layer = _find_layer(project, point_layer_name)
@@ -158,9 +154,7 @@ def _write_atlas(
     temporary = QgsVectorLayer("Point", "theme_index", "memory")
     temporary.setCrs(layer.crs())
     provider = temporary.dataProvider()
-    provider.addAttributes(
-        [QgsField("theme_name", QVariant.String), QgsField("out_name", QVariant.String)]
-    )
+    provider.addAttributes([QgsField("theme_name", QVariant.String), QgsField("out_name", QVariant.String)])
     temporary.updateFields()
     features: list[QgsFeature] = []
     for row in rows:
@@ -178,9 +172,7 @@ def _write_atlas(
     options.layerName = "theme_index"
     staging = output.with_name(f".{output.stem}.{uuid4().hex}.tmp.gpkg")
     try:
-        result = QgsVectorFileWriter.writeAsVectorFormatV3(
-            temporary, str(staging), project.transformContext(), options
-        )
+        result = QgsVectorFileWriter.writeAsVectorFormatV3(temporary, str(staging), project.transformContext(), options)
         if result[0] != QgsVectorFileWriter.NoError:
             message = f"Atlas export failed: {result}"
             raise RuntimeError(message)
@@ -238,8 +230,7 @@ def main(
     _write_csv((root / output_csv_file).absolute(), rows)
     if atlas_point_layer_name is not None:
         _write_atlas(
-            project, atlas_point_layer_name, (root / atlas_output_file).absolute(),
-            rows, overwrite=overwrite_atlas
+            project, atlas_point_layer_name, (root / atlas_output_file).absolute(), rows, overwrite=overwrite_atlas
         )
     print(f"Created {len(created)} theme(s), skipped {len(failures)}; script {WRAPPER_VERSION}")
     for failure in failures:
