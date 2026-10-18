@@ -26,7 +26,6 @@ import re
 from collections.abc import Iterable
 from uuid import uuid4
 
-from qgis.PyQt.QtCore import QVariant
 from qgis.core import (
     QgsFeature,
     QgsField,
@@ -34,14 +33,15 @@ from qgis.core import (
     QgsLayerTreeGroup,
     QgsLayerTreeLayer,
     QgsLayerTreeModel,
-    QgsMapThemeCollection,
     QgsMapLayer,
+    QgsMapThemeCollection,
     QgsPointXY,
     QgsProject,
     QgsVectorFileWriter,
     QgsVectorLayer,
     QgsWkbTypes,
 )
+from qgis.PyQt.QtCore import QVariant
 
 
 def _iter_nodes(group: QgsLayerTreeGroup) -> Iterable[QgsLayerTreeGroup | QgsLayerTreeLayer]:
