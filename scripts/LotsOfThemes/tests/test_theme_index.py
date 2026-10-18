@@ -74,3 +74,10 @@ def test_empty_and_duplicate_themes(theme_script: Any) -> None:
     assert theme_script.build_output_rows([]) == []
     with pytest.raises(ValueError, match="Duplicate theme"):
         theme_script.build_output_rows(["Alpha", "alpha"])
+
+
+def test_aep_requires_complete_token_boundary(theme_script: Any) -> None:
+    embedded = theme_script.build_output_rows(["storm01.0p_V_Max"])
+    valid = theme_script.build_output_rows(["storm_01.0p_V_Max"])
+    assert embedded[0]["AEP"] == "N/A"
+    assert valid[0]["AEP"] == "01.0"
