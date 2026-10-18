@@ -103,8 +103,14 @@ def clean_fields(
 def main() -> None:
     """Run against the current QGIS layer-tree selection."""
     from qgis.core import QgsVectorLayer
+    from qgis.utils import iface as qgis_iface
 
-    selected = [layer for layer in iface.layerTreeView().selectedLayers() if isinstance(layer, QgsVectorLayer)]  # noqa: F821
+    if qgis_iface is None:
+        message = "QGIS GUI session is required for selecting layers"
+        raise RuntimeError(message)
+    selected = [
+        layer for layer in qgis_iface.layerTreeView().selectedLayers() if isinstance(layer, QgsVectorLayer)
+    ]
     clean_fields(
         selected,
         fields_to_delete=DEFAULT_FIELD_NAMES,
