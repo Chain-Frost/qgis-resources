@@ -24,6 +24,7 @@ DEFAULT_OVERWRITE_ATLAS = False
 import csv
 import re
 from collections.abc import Iterable
+from uuid import uuid4
 
 from qgis.PyQt.QtCore import QVariant
 from qgis.core import (
@@ -34,6 +35,7 @@ from qgis.core import (
     QgsLayerTreeLayer,
     QgsLayerTreeModel,
     QgsMapThemeCollection,
+    QgsPointXY,
     QgsProject,
     QgsVectorFileWriter,
     QgsVectorLayer,
@@ -129,8 +131,8 @@ def _atlas_geometry(layer: QgsVectorLayer) -> QgsGeometry:
         points = geometry.asMultiPoint()
         if not points:
             raise ValueError("Atlas source multipoint is empty")
-        return QgsGeometry.fromPointXY(points[0])
-    return QgsGeometry.fromPointXY(geometry.asPoint())
+        return QgsGeometry.fromPointXY(QgsPointXY(points[0]))
+    return QgsGeometry.fromPointXY(QgsPointXY(geometry.asPoint()))
 
 
 def _write_atlas(
@@ -164,13 +166,16 @@ def _write_atlas(
     options = QgsVectorFileWriter.SaveVectorOptions()
     options.driverName = "GPKG"
     options.layerName = "theme_index"
-    if output.exists() and overwrite:
-        output.unlink()
-    result = QgsVectorFileWriter.writeAsVectorFormatV3(
-        temporary, str(output), project.transformContext(), options
-    )
-    if result[0] != QgsVectorFileWriter.NoError:
-        raise RuntimeError(f"Atlas export failed: {result}")
+    staging = output.with_name(f".{output.stem}.{uuid4().hex}.tmp.gpkg")
+    try:
+        result = QgsVectorFileWriter.writeAsVectorFormatV3(
+            temporary, str(staging), project.transformContext(), options
+        )
+        if result[0] != QgsVectorFileWriter.NoError:
+            raise RuntimeError(f"Atlas export failed: {result}")
+        staging.replace(output)
+    finally:
+        staging.unlink(missing_ok=True)
     print(f"Atlas index: {output}, {len(rows)} feature(s)")
 
 
@@ -201,6 +206,8 @@ def main(
     for name in requested:
         theme_name = theme_prefix + name
         try:
+            if theme_name == base_theme_name:
+                raise ValueError("Cannot replace the source/base theme")
             layer = _find_layer(project, name)
             if collection.hasMapTheme(theme_name) and not overwrite_existing:
                 raise FileExistsError(f"Theme already exists: {theme_name}")
