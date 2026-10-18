@@ -138,7 +138,8 @@ def test_cleanup_removes_fields_in_reverse_index_order(tools: tuple[Any, Any], t
 
 
 def test_cleanup_rejects_other_formats_and_handles_commit_error(
-    tools: tuple[Any, Any], tmp_path: Path,
+    tools: tuple[Any, Any],
+    tmp_path: Path,
 ) -> None:
     cleanup, _ = tools
     shp = FakeLayer(tmp_path / "a.shp", field_names=["Text"])
