@@ -27,6 +27,7 @@ def theme_script(monkeypatch: pytest.MonkeyPatch) -> Any:
         "QgsLayerTreeGroup",
         "QgsLayerTreeLayer",
         "QgsLayerTreeModel",
+        "QgsMapLayer",
         "QgsMapThemeCollection",
         "QgsPointXY",
         "QgsProject",
