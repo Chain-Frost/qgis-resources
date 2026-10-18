@@ -21,15 +21,26 @@ def theme_script(monkeypatch: pytest.MonkeyPatch) -> Any:
     core = ModuleType("qgis.core")
     qtcore.QVariant = type("QVariant", (), {"String": "string"})  # type: ignore[attr-defined]
     class_names = [
-        "QgsFeature", "QgsField", "QgsGeometry", "QgsLayerTreeGroup",
-        "QgsLayerTreeLayer", "QgsLayerTreeModel", "QgsMapThemeCollection",
-        "QgsPointXY", "QgsProject", "QgsVectorFileWriter", "QgsVectorLayer", "QgsWkbTypes",
+        "QgsFeature",
+        "QgsField",
+        "QgsGeometry",
+        "QgsLayerTreeGroup",
+        "QgsLayerTreeLayer",
+        "QgsLayerTreeModel",
+        "QgsMapThemeCollection",
+        "QgsPointXY",
+        "QgsProject",
+        "QgsVectorFileWriter",
+        "QgsVectorLayer",
+        "QgsWkbTypes",
     ]
     for name in class_names:
         setattr(core, name, type(name, (), {}))
     for name, module in [
-        ("qgis", qgis), ("qgis.PyQt", qt),
-        ("qgis.PyQt.QtCore", qtcore), ("qgis.core", core),
+        ("qgis", qgis),
+        ("qgis.PyQt", qt),
+        ("qgis.PyQt.QtCore", qtcore),
+        ("qgis.core", core),
     ]:
         monkeypatch.setitem(sys.modules, name, module)
     source = Path(__file__).resolve().parents[1] / "create_new_themes_from_list.py"
@@ -41,12 +52,15 @@ def theme_script(monkeypatch: pytest.MonkeyPatch) -> Any:
 
 
 def test_output_rows_are_sorted_and_sequential(theme_script: Any) -> None:
-    rows = theme_script.build_output_rows([
-        "Z_05.0p_0120m_V_Max",
-        "A_01.0p_0360m_d_HR_Max_DIFF",
-    ])
+    rows = theme_script.build_output_rows(
+        [
+            "Z_05.0p_0120m_V_Max",
+            "A_01.0p_0360m_d_HR_Max_DIFF",
+        ]
+    )
     assert [row["theme_name"] for row in rows] == [
-        "A_01.0p_0360m_d_HR_Max_DIFF", "Z_05.0p_0120m_V_Max",
+        "A_01.0p_0360m_d_HR_Max_DIFF",
+        "Z_05.0p_0120m_V_Max",
     ]
     assert [row["out_name"] for row in rows] == ["00000", "00001"]
     assert rows[0]["AEP"] == "01.0"
