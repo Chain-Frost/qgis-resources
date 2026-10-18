@@ -88,7 +88,7 @@ def _create_theme(project: QgsProject, base_layer_ids: set[str], target_id: str)
 def _name_metadata(name: str) -> dict[str, str | int]:
     """Extract metadata from the requested theme name, not from a fixed suffix."""
     parts = re.split(r"[_+]", name)
-    aep = re.search(r"(?<![0-9])(\d{2}\.\d{1,2}p)(?=[_+]|$)", name, re.IGNORECASE)
+    aep = re.search(r"(?:^|[_+])(\d{2}\.\d{1,2}p)(?=[_+]|$)", name, re.IGNORECASE)
     duration = re.search(r"(?:^|[_+])(\d{3,5}m)(?=[_+]|$)", name, re.IGNORECASE)
     result_types = ("d_HR_Max", "h_HR_Max", "V_Max", "d_Max", "h_Max", "dt_Min", "TMax_h", "DEM_Z_HR", "DEM_Z")
     result = next((kind for kind in result_types if kind.casefold() in name.casefold()), "Unknown")
