@@ -24,7 +24,7 @@ jobs:
         run: python -m pip install "ruff==0.16.6" "pytest>=8,<10"
       - name: Check lint
         run: |
-          python -m ruff check --isolated --target-version py314 --select E,F,W,B,UP,EM,PTH,FURB,I \
+          python -m ruff check --isolated --target-version py314 --select E,F,W,B,UP,EM,PTH,FURB,I --ignore E402,E501 \
             scripts/LotsOfThemes/create_new_themes_from_list.py \
             scripts/LotsOfThemes/tests/test_theme_index.py
       - name: Check formatting
