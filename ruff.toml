@@ -1,0 +1,14 @@
+# QGIS 4 on Windows uses Python 3.12; independent of ryan-tools Python 3.14.
+required-version = "==0.16.6"
+target-version = "py312"
+line-length = 120
+
+[lint]
+select = ["E", "W", "F", "B", "UP", "I", "EM", "PTH", "FURB", "RUF"]
+ignore = ["E501", "ISC001"]
+
+[lint.per-file-ignores]
+# Editable defaults intentionally precede QGIS imports in the console script.
+"scripts/LotsOfThemes/create_new_themes_from_list.py" = ["E402"]
+# Tests use assertions and may construct stub modules dynamically.
+"**/tests/**/*.py" = ["S101", "INP001"]

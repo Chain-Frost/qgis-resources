@@ -1,0 +1,58 @@
+name: QGIS Python checks
+
+on:
+  pull_request:
+    paths:
+      - "scripts/**"
+      - "raster-crs/**"
+      - "ruff.toml"
+      - "pyrightconfig.json"
+      - ".github/workflows/qgis-python-qa.yml"
+  push:
+    branches: [main]
+    paths:
+      - "scripts/**"
+      - "raster-crs/**"
+      - "ruff.toml"
+      - "pyrightconfig.json"
+      - ".github/workflows/qgis-python-qa.yml"
+
+jobs:
+  maintained-python:
+    name: QGIS 4 Python 3.12 static and headless tests
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pinned development tools
+        run: python -m pip install ruff==0.16.6 pyright==1.1.414 pytest==9.1.1
+      - name: Ruff lint maintained scripts and tests
+        run: >-
+          python -m ruff check
+          scripts/cleanup_geopackage_fields.py
+          scripts/create_spatial_indexes.py
+          scripts/LotsOfThemes/create_new_themes_from_list.py
+          scripts/LotsOfThemes/tests/
+          scripts/tests/
+      - name: Ruff format maintained scripts and tests
+        run: >-
+          python -m ruff format --check
+          scripts/cleanup_geopackage_fields.py
+          scripts/create_spatial_indexes.py
+          scripts/LotsOfThemes/create_new_themes_from_list.py
+          scripts/LotsOfThemes/tests/
+          scripts/tests/
+      - name: Pyright Python 3.12 compatibility
+        run: python -m pyright -p pyrightconfig.json
+      - name: Test pure Python logic (QGIS mocked)
+        run: python -m pytest scripts/LotsOfThemes/tests scripts/tests -q
+      - name: Report legacy Ruff baseline (informational)
+        shell: pwsh
+        run: |
+          python -m ruff check scripts raster-crs --statistics
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "Legacy scripts have lint debt; new and maintained scripts are gated above."
+            exit 0
+          }
