@@ -108,9 +108,7 @@ def main() -> None:
     if qgis_iface is None:
         message = "QGIS GUI session is required for selecting layers"
         raise RuntimeError(message)
-    selected = [
-        layer for layer in qgis_iface.layerTreeView().selectedLayers() if isinstance(layer, QgsVectorLayer)
-    ]
+    selected = [layer for layer in qgis_iface.layerTreeView().selectedLayers() if isinstance(layer, QgsVectorLayer)]
     clean_fields(
         selected,
         fields_to_delete=DEFAULT_FIELD_NAMES,
