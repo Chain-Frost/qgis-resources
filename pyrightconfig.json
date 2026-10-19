@@ -5,7 +5,7 @@
     "scripts/LotsOfThemes/create_new_themes_from_list.py"
   ],
   "exclude": [
-    "**/tests",
+    "tests",
     "**/__pycache__"
   ],
   "pythonVersion": "3.12",

@@ -5,6 +5,7 @@ on:
     paths:
       - "scripts/**"
       - "raster-crs/**"
+      - "tests/**"
       - "ruff.toml"
       - "pyrightconfig.json"
       - ".github/workflows/qgis-python-qa.yml"
@@ -13,6 +14,7 @@ on:
     paths:
       - "scripts/**"
       - "raster-crs/**"
+      - "tests/**"
       - "ruff.toml"
       - "pyrightconfig.json"
       - ".github/workflows/qgis-python-qa.yml"
@@ -29,10 +31,10 @@ jobs:
       - name: Install pinned development tools
         run: python -m pip install ruff==0.16.6 pyright==1.1.414 pytest==9.1.1
       - name: Ruff lint all repository QGIS Python
-        run: python -m ruff check scripts raster-crs
+        run: python -m ruff check scripts raster-crs tests
       - name: Ruff format all repository QGIS Python
-        run: python -m ruff format --check scripts raster-crs
+        run: python -m ruff format --check scripts raster-crs tests
       - name: Pyright Python 3.12 compatibility
         run: python -m pyright -p pyrightconfig.json
       - name: Test pure Python logic (QGIS mocked)
-        run: python -m pytest scripts/LotsOfThemes/tests scripts/tests -q
+        run: python -m pytest tests -q

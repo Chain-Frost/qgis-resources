@@ -29,8 +29,7 @@ successful export.
 
 ## Validation required before production adoption
 
-A small headless test covers pure theme-name/row calculations, using a stub
-PyQGIS module. Real QGIS 4 desktop validation is still necessary:
+The headless test in [`tests/test_theme_index.py`](../../tests/test_theme_index.py) covers pure theme-name/row calculations using a stub PyQGIS module. Real QGIS 4 desktop validation is still necessary:
 
 1. Load a project with a known base theme, a nested group and distinct raster
    layers. Verify generated theme visibility and that user-selected layer

@@ -11,11 +11,11 @@ backward compatibility is not a goal.
   Windows. Headless CI excludes missing native PyQGIS bindings; run
   Pyright locally against the installed QGIS 4 Python environment for API
   accuracy. The initial tracked-code type-checking policy is basic.
-- Pytest: pure logic is tested with minimal QGIS mocks in Windows CI.
+- Pytest: all tests live under the top-level `tests/` directory; pure logic is tested with minimal QGIS mocks in Windows CI.
   These tests do **not** verify native processing, GeoPackage writes, QGIS
   editing-provider behaviour, or real map themes. Manual QGIS 4 validation
   is necessary before approving those workflows.
-- All tracked Python files under `scripts/` and `raster-crs/`, including
+- All tracked Python files under `scripts/`, `raster-crs/` and `tests/`, including
   legacy one-off utilities, are now Ruff-lint and Ruff-format clean.
   Both checks run as required gates in Windows/Python 3.12 CI. This
   mechanical cleanup does not imply functional validation or ongoing
@@ -25,10 +25,10 @@ Locally, from a QGIS-enabled shell (or another Python 3.12 environment):
 
 ```powershell
 python -m pip install ruff==0.16.6 pyright==1.1.414 pytest==9.1.1
-python -m ruff check scripts raster-crs
-python -m ruff format --check scripts raster-crs
+python -m ruff check scripts raster-crs tests
+python -m ruff format --check scripts raster-crs tests
 python -m pyright -p pyrightconfig.json
-python -m pytest scripts/tests scripts/LotsOfThemes/tests -q
+python -m pytest tests -q
 ```
 
 ## Migrated operations

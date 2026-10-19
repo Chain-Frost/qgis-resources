@@ -21,7 +21,7 @@ def tools(monkeypatch: pytest.MonkeyPatch) -> tuple[ModuleType, ModuleType]:
     core.Qgis = type("Qgis", (), {"VectorProviderCapability": capability})  # type: ignore[attr-defined]
     monkeypatch.setitem(sys.modules, "qgis", qgis)
     monkeypatch.setitem(sys.modules, "qgis.core", core)
-    folder = Path(__file__).absolute().parents[1]
+    folder = Path(__file__).absolute().parents[1] / "scripts"
     modules = []
     for filename in ("cleanup_geopackage_fields.py", "create_spatial_indexes.py"):
         source = folder / filename

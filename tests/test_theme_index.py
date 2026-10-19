@@ -44,7 +44,7 @@ def theme_script(monkeypatch: pytest.MonkeyPatch) -> Any:
         ("qgis.core", core),
     ]:
         monkeypatch.setitem(sys.modules, name, module)
-    source = Path(__file__).resolve().parents[1] / "create_new_themes_from_list.py"
+    source = Path(__file__).resolve().parents[1] / "scripts" / "LotsOfThemes" / "create_new_themes_from_list.py"
     spec = importlib.util.spec_from_file_location("_qgis_theme_test", source)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
