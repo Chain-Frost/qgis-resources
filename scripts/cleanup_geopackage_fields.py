@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-    from qgis.core import QgsVectorLayer
+    from qgis.core import QgsVectorLayer  # pyright: ignore[reportMissingTypeStubs]
 
 SCRIPT_VERSION = "2026-10-19.1"
 DEFAULT_FIELD_NAMES: tuple[str, ...] = ("PaperSpace", "SubClasses", "Linetype", "EntityHandle", "Text")
@@ -103,8 +103,8 @@ def clean_fields(
 
 def main() -> None:
     """Run against the current QGIS layer-tree selection."""
-    from qgis.core import QgsVectorLayer
-    from qgis.utils import iface as qgis_iface
+    from qgis.core import QgsVectorLayer  # pyright: ignore[reportMissingTypeStubs]
+    from qgis.utils import iface as qgis_iface  # pyright: ignore[reportMissingTypeStubs]
 
     if qgis_iface is None:
         message = "QGIS GUI session is required for selecting layers"

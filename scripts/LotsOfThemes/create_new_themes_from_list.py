@@ -26,7 +26,7 @@ import re
 from collections.abc import Iterable
 from uuid import uuid4
 
-from qgis.core import (
+from qgis.core import (  # pyright: ignore[reportMissingTypeStubs] -- SIP-generated API uses _core.pyi
     QgsFeature,
     QgsField,
     QgsGeometry,
@@ -41,7 +41,7 @@ from qgis.core import (
     QgsVectorLayer,
     QgsWkbTypes,
 )
-from qgis.PyQt.QtCore import QMetaType
+from qgis.PyQt.QtCore import QMetaType  # pyright: ignore[reportMissingModuleSource]
 
 
 def _iter_nodes(group: QgsLayerTreeGroup) -> Iterable[QgsLayerTreeGroup | QgsLayerTreeLayer]:
