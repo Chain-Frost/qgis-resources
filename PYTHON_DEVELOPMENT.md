@@ -9,9 +9,8 @@ backward compatibility is not a goal.
   where appropriate, with a Python 3.12 target.
 - Pyright 1.1.414: **strict CI gates** cover the independent project
   parser (`pyright-ci.json`) and the maintained QGIS 4 utilities
-  (`pyrightconfig.json`). The latter uses pinned
-  the latest compatible `qgis-stubs>=1.0.0.dev0,<2` (including prereleases)
-  with PyQt6 type definitions, resolving QGIS
+  (`pyrightconfig.json`). The latter uses the latest compatible `qgis-stubs>=1.0.0.dev0,<2`
+  (including prereleases) with PyQt6 type definitions, resolving QGIS
   members in headless CI without loading actual QGIS binaries. The
   former basic headless baseline has been retired.
 - Pytest: all tests live under the top-level `tests/` directory; pure logic is tested with minimal QGIS mocks in Windows CI.
@@ -34,7 +33,6 @@ python -m ruff format --check scripts raster-crs tests CRS_info
 python -m pyright -p pyright-ci.json
 python -m pyright -p pyrightconfig.json
 python -m pyright -p pyright-all.json
-python -m pyright -p pyright-spatial-audit.json  # informational until QGIS 4 remediation
 python -m pytest tests -q
 ```
 
@@ -78,18 +76,24 @@ checks below remain required before production use.
 
 ## Legacy Python audit
 
-CI enforces a **basic Pyright minimum standard** over `scripts/`,
-`raster-crs/`, and the legacy `CRS_info/params3.py` example through
-`pyright-all.json`, excluding only `Spatial_Rainfall_Pattern.py`.
+CI enforces a **basic Pyright minimum standard** over every Python utility
+in `scripts/`, `raster-crs/`, and the legacy `CRS_info/params3.py`
+example through `pyright-all.json`, with **no excluded Python script**.
 The four maintained utilities remain subject to **strict Pyright**.
-The rainfall-processing script is independently audited using
-`pyright-spatial-audit.json` (informational). [Issue #5](https://github.com/Chain-Frost/qgis-resources/issues/5)
-tracks the remaining refactor and native QGIS 4 validation. Its baseline contained
-**82 Pyright errors**, largely optional processing outputs, nullable
-providers and over-broad `QgsMapLayer` types. It needs a separate
-behaviour-preserving QGIS 4 refactor with real geospatial test data;
-these errors are not suppressed globally and the file is not
-considered validated for QGIS 4.
+
+The previously field-tested `Spatial_Rainfall_Pattern.py` initially had
+**82 Pyright errors**, mainly optional processing outputs, nullable QGIS
+layers/providers and overly broad `QgsMapLayer` types. These were resolved
+using explicit output/layer/provider checks and type-only annotations.
+**Its proven numeric and polygon-processing choices were deliberately left
+unchanged**, including fix-geometries/buffer fallback, per-vertex snapping,
+topology polygonization, nearest-neighbour attribute restore, and the
+final inward buffer. New mocked tests cover those key invariants and
+fallback order, but **do not establish actual QGIS 4/TUFLOW polygon parity**.
+[Issue #5](https://github.com/Chain-Frost/qgis-resources/issues/5)
+tracks comparison against previous successful project outputs and QGIS 4
+desktop execution. Preserve this algorithm until equivalent geometry,
+attributes, gap spacing and TUFLOW behaviour are demonstrated.
 
 All other Python utilities have been updated for QGIS 4 typed interfaces,
 including correcting the shapefile writer, QLR writer signature,

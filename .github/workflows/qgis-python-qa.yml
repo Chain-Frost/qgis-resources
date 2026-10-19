@@ -12,7 +12,6 @@ on:
       - "PYTHON_DEVELOPMENT.md"
       - "pyright-ci.json"
       - "pyright-all.json"
-      - "pyright-spatial-audit.json"
       - ".github/workflows/qgis-python-qa.yml"
   push:
     branches: [main]
@@ -26,7 +25,6 @@ on:
       - "PYTHON_DEVELOPMENT.md"
       - "pyright-ci.json"
       - "pyright-all.json"
-      - "pyright-spatial-audit.json"
       - ".github/workflows/qgis-python-qa.yml"
 
 jobs:
@@ -53,13 +51,5 @@ jobs:
         run: python -m pyright -p pyrightconfig.json
       - name: Basic Pyright minimum for remaining Python utilities
         run: python -m pyright -p pyright-all.json
-      - name: Audit legacy spatial rainfall processor (informational)
-        shell: pwsh
-        run: |
-          python -m pyright -p pyright-spatial-audit.json
-          if ($LASTEXITCODE -ne 0) {
-            Write-Host "Spatial_Rainfall_Pattern.py requires separate QGIS 4 API remediation and real QGIS tests."
-            exit 0
-          }
       - name: Test pure Python logic (QGIS mocked)
         run: python -m pytest tests -q
