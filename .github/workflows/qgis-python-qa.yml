@@ -48,6 +48,13 @@ jobs:
         run: python -m pyright -p pyrightconfig.json
       - name: Test pure Python logic (QGIS mocked)
         run: python -m pytest scripts/LotsOfThemes/tests scripts/tests -q
+      - name: Preview exception-message cleanup (informational)
+        shell: pwsh
+        run: |
+          Write-Host "BEGIN_EM_DIFF"
+          python -m ruff check scripts raster-crs --select EM101,EM102 --unsafe-fixes --fix --diff
+          Write-Host "END_EM_DIFF"
+          exit 0
       - name: Report legacy Ruff baseline (informational)
         shell: pwsh
         run: |
