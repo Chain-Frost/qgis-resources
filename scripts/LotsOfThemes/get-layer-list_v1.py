@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from qgis.core import QgsProject  # type: ignore
 
 group_name = "results"  # Replace with your group name
@@ -16,7 +18,7 @@ def export_layer_list(group_name, output_file):
     layers = group.findLayers()
     layer_names = sorted([layer.layer().name() for layer in layers])
 
-    with open(output_file, "w") as file:
+    with Path(output_file).open("w") as file:
         file.writelines(name + "\n" for name in layer_names)
 
 

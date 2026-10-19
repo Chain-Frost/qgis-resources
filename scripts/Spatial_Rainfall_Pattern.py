@@ -6,12 +6,12 @@ rebuild topology, apply an inward buffer, and write the final singlepart polygon
 Allows an optional control-point override for centroid sampling in the QA output.
 """
 
-# Spatial_Rainfall_Pattern – QGIS 3.44.3
+# Spatial_Rainfall_Pattern - historical QGIS 3.44.3 (QGIS 4 validation pending)
 # Per-cell grid (no dissolve) → PoS raster sampling → NoData filter → clip in raster CRS
 # → area-weighted average → add f1,f2 on clipped cells
 # → per-vertex reprojection + mm snap (to input polygon CRS)
 # → topology rebuild → PoS attribute restore
-# → final inward buffer (−0.5 m, miter) → drop <1 m² → singleparts
+# → final inward buffer (-0.5 m, miter) → drop <1 m² → singleparts
 # → write sink in input polygon CRS + print summary (avg_rainfall | centroid_raster_value)
 # 2025-10-29 version
 from __future__ import annotations
@@ -139,7 +139,7 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
             )["OUTPUT"]
         except Exception as e:
             msg = f"Geometry repair failed (fixgeometries/buffer 0). Error: {e}"
-            raise QgsProcessingException(msg)
+            raise QgsProcessingException(msg) from e
 
     def _transform_snap_polygons(
         self,
@@ -660,7 +660,7 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
             "native:buffer",
             {
                 "INPUT": cleaned_id,
-                "DISTANCE": self.FINAL_BUFFER_M,  # −0.5 m
+                "DISTANCE": self.FINAL_BUFFER_M,  # -0.5 m
                 "SEGMENTS": 1,
                 "END_CAP_STYLE": 0,
                 "JOIN_STYLE": 1,  # miter (square)

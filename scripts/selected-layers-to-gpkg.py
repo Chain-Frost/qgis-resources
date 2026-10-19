@@ -7,6 +7,7 @@ from qgis.core import (
     QgsVectorFileWriter,
     QgsVectorLayer,
 )
+from qgis.utils import iface
 
 OUTPUT_DIR = Path(r"E:\path\data")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)

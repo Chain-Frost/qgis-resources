@@ -1,3 +1,5 @@
+from qgis.core import QgsProject, QgsVectorFileWriter
+
 suffix = "_export"
 pathToFile = r"C:\temp\\"  # needs the extra \ to escape it
 theme_Name = "layers"

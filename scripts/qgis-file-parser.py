@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import argparse
-import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -325,7 +324,7 @@ def resolve_datasource_path(*, path_text: str, project_home: Path) -> Path:
 
 
 def absolute_normalized(*, path: Path) -> Path:
-    return Path(os.path.abspath(path))
+    return path.absolute()
 
 
 def normalize_slashes(*, path_text: str) -> str:

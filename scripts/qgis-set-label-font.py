@@ -5,6 +5,7 @@ from qgis.core import (
     QgsVectorLayer,
 )
 from qgis.PyQt.QtGui import QFontDatabase
+from qgis.utils import iface
 
 FONT_FAMILY = "Calibri"
 
