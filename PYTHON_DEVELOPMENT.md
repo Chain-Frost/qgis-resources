@@ -29,11 +29,12 @@ Locally, from a QGIS-enabled shell (or another Python 3.12 environment):
 ```powershell
 python -m pip install ruff==0.16.6 pyright==1.1.414 pytest==9.1.1 numpy rasterio pyproj
 python -m pip install --pre "qgis-stubs>=1.0.0.dev0,<2"
-python -m ruff check scripts raster-crs tests
-python -m ruff format --check scripts raster-crs tests
+python -m ruff check scripts raster-crs tests CRS_info
+python -m ruff format --check scripts raster-crs tests CRS_info
 python -m pyright -p pyright-ci.json
 python -m pyright -p pyrightconfig.json
 python -m pyright -p pyright-all.json
+python -m pyright -p pyright-spatial-audit.json  # informational until QGIS 4 remediation
 python -m pytest tests -q
 ```
 
@@ -77,13 +78,25 @@ checks below remain required before production use.
 
 ## Legacy Python audit
 
-CI currently runs `pyright-all.json` over the older `scripts/`,
-`raster-crs/`, and `CRS_info/params3.py` utilities. While
-baseline findings are being addressed the **full repository scan is
-informational**; the maintained scripts remain strict-gated. The
-goal is to make a meaningful Pyright minimum standard mandatory for all
-Python utilities, with no blanket missing-import suppressions and
-real QGIS 4-specific validation for QGIS-dependent functions.
+CI enforces a **basic Pyright minimum standard** over `scripts/`,
+`raster-crs/`, and the legacy `CRS_info/params3.py` example through
+`pyright-all.json`, excluding only `Spatial_Rainfall_Pattern.py`.
+The four maintained utilities remain subject to **strict Pyright**.
+The rainfall-processing script is independently audited using
+`pyright-spatial-audit.json` (informational). Its baseline contained
+**82 Pyright errors**, largely optional processing outputs, nullable
+providers and over-broad `QgsMapLayer` types. It needs a separate
+behaviour-preserving QGIS 4 refactor with real geospatial test data;
+these errors are not suppressed globally and the file is not
+considered validated for QGIS 4.
+
+All other Python utilities have been updated for QGIS 4 typed interfaces,
+including correcting the shapefile writer, QLR writer signature,
+missing layer/project/provider guards, and unsafe attribute transactions.
+The historical plant-grid `params3.py` needs the separately
+distributed `simil` package to execute: its single unresolved
+external import is narrowly annotated for static checking. Do not
+assume this numerical example is independently validated.
 
 ## Migrated operations
 

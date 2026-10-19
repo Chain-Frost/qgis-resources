@@ -10,6 +10,7 @@ on:
       - "pyrightconfig.json"
       - "pyright-ci.json"
       - "pyright-all.json"
+      - "pyright-spatial-audit.json"
       - ".github/workflows/qgis-python-qa.yml"
   push:
     branches: [main]
@@ -21,6 +22,7 @@ on:
       - "pyrightconfig.json"
       - "pyright-ci.json"
       - "pyright-all.json"
+      - "pyright-spatial-audit.json"
       - ".github/workflows/qgis-python-qa.yml"
 
 jobs:
@@ -38,19 +40,21 @@ jobs:
           python -m pip install --pre "qgis-stubs>=1.0.0.dev0,<2"
           python -m pip show qgis-stubs
       - name: Ruff lint all repository QGIS Python
-        run: python -m ruff check scripts raster-crs tests
+        run: python -m ruff check scripts raster-crs tests CRS_info
       - name: Ruff format all repository QGIS Python
-        run: python -m ruff format --check scripts raster-crs tests
+        run: python -m ruff format --check scripts raster-crs tests CRS_info
       - name: Strict Pyright on QGIS-independent code
         run: python -m pyright -p pyright-ci.json
       - name: Strict Pyright for maintained QGIS 4 utilities
         run: python -m pyright -p pyrightconfig.json
-      - name: Inventory Pyright across legacy Python utilities (informational)
+      - name: Basic Pyright minimum for remaining Python utilities
+        run: python -m pyright -p pyright-all.json
+      - name: Audit legacy spatial rainfall processor (informational)
         shell: pwsh
         run: |
-          python -m pyright -p pyright-all.json
+          python -m pyright -p pyright-spatial-audit.json
           if ($LASTEXITCODE -ne 0) {
-            Write-Host "Legacy Pyright diagnostics require remediation; strict maintained-script checks remain mandatory."
+            Write-Host "Spatial_Rainfall_Pattern.py requires separate QGIS 4 API remediation and real QGIS tests."
             exit 0
           }
       - name: Test pure Python logic (QGIS mocked)

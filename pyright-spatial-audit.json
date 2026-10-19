@@ -1,0 +1,12 @@
+{
+  "include": [
+    "scripts/Spatial_Rainfall_Pattern.py"
+  ],
+  "exclude": [
+    "tests",
+    "**/__pycache__"
+  ],
+  "pythonVersion": "3.12",
+  "pythonPlatform": "Windows",
+  "typeCheckingMode": "basic"
+}

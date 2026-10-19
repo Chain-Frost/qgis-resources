@@ -6,6 +6,7 @@
   ],
   "exclude": [
     "tests",
+    "scripts/Spatial_Rainfall_Pattern.py",
     "**/__pycache__"
   ],
   "extraPaths": [
