@@ -7,11 +7,12 @@ backward compatibility is not a goal.
 
 - Ruff 0.16.6: configured in root ruff.toml, aligned with ryan-tools rules
   where appropriate, with a Python 3.12 target.
-- Pyright 1.1.414: CI enforces **strict** checking of QGIS-independent
-  code through `pyright-ci.json`, and retains the existing **basic**
-  QGIS-dependent headless baseline via `pyright-headless.json`.
-  The default `pyrightconfig.json` enables **strict local QGIS 4** type
-  checking. Strict PyQGIS validation is not yet a CI gate.
+- Pyright 1.1.414: **strict CI gates** cover the independent project
+  parser (`pyright-ci.json`) and the maintained QGIS 4 utilities
+  (`pyrightconfig.json`). The latter uses pinned
+  `qgis-stubs==1.0.0.dev2` with PyQt6 type definitions, resolving QGIS
+  members in headless CI without loading actual QGIS binaries. The
+  former basic headless baseline has been retired.
 - Pytest: all tests live under the top-level `tests/` directory; pure logic is tested with minimal QGIS mocks in Windows CI.
   These tests do **not** verify native processing, GeoPackage writes, QGIS
   editing-provider behaviour, or real map themes. Manual QGIS 4 validation
@@ -29,8 +30,7 @@ python -m pip install ruff==0.16.6 pyright==1.1.414 pytest==9.1.1 qgis-stubs==1.
 python -m ruff check scripts raster-crs tests
 python -m ruff format --check scripts raster-crs tests
 python -m pyright -p pyright-ci.json
-python -m pyright -p pyright-headless.json
-python -m pyright -p pyrightconfig.json  # strict QGIS 4 stubs; diagnostics require review
+python -m pyright -p pyrightconfig.json
 python -m pytest tests -q
 ```
 
@@ -52,8 +52,9 @@ python -m pyright -p pyrightconfig.json
 
 The environment helper reports actual QGIS/Qt/Python versions and binding
 locations, failing for incompatible Python, QGIS or Qt versions. PyQGIS
-wraps native C++ classes via SIP; Pyright needs matching QGIS and PyQt6
-type definitions for complete checking. Optional local stubs can be
+wraps native C++ classes via SIP; Pyright uses the pinned QGIS 4/PyQt6
+stub definitions, which must be checked against the actual bindings
+when APIs evolve. Optional local stubs can be
 placed in `.vscode/qgis-type-stubs`. Generated third-party stubs should
 not be committed. **QGIS 4/Qt6 stubs are available as a prerelease:**
 `qgis-stubs==1.0.0.dev2` (published 10 October 2026). It is pinned in
@@ -65,11 +66,12 @@ with the installed QGIS 4 environment and verify its declarations against
 the actual QGIS 4 API. Do not treat the prerelease as proven compatible
 with every QGIS 4 minor version.
 
-Hosted CI intentionally has no native QGIS bindings: the headless basic
-gate disables missing-import reports but cannot validate their APIs.
-The separate strict CI gate covers the pure-Python project parser.
-Expanding strict type checking to the real QGIS API requires tested
-type definitions and native QGIS 4 validation, not broader suppressions.
+Hosted CI runs **strict Pyright** for the maintained QGIS 4 utilities
+and project parser against the pinned QGIS 4 prerelease stubs. The
+QGIS/Qt bindings themselves are not executed in this environment:
+signatures or behaviours missing or incorrect in the prerelease
+stubs may still produce false negatives. The local QGIS 4 desktop
+checks below remain required before production use.
 
 ## Migrated operations
 

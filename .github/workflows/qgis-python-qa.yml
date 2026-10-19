@@ -9,7 +9,6 @@ on:
       - "ruff.toml"
       - "pyrightconfig.json"
       - "pyright-ci.json"
-      - "pyright-headless.json"
       - ".github/workflows/qgis-python-qa.yml"
   push:
     branches: [main]
@@ -20,7 +19,6 @@ on:
       - "ruff.toml"
       - "pyrightconfig.json"
       - "pyright-ci.json"
-      - "pyright-headless.json"
       - ".github/workflows/qgis-python-qa.yml"
 
 jobs:
@@ -40,10 +38,7 @@ jobs:
         run: python -m ruff format --check scripts raster-crs tests
       - name: Strict Pyright on QGIS-independent code
         run: python -m pyright -p pyright-ci.json
-      - name: Pyright QGIS-dependent headless baseline
-        run: python -m pyright -p pyright-headless.json
-      - name: Assess strict PyQGIS stub coverage (diagnostic)
-        continue-on-error: true
+      - name: Strict Pyright for maintained QGIS 4 utilities
         run: python -m pyright -p pyrightconfig.json
       - name: Test pure Python logic (QGIS mocked)
         run: python -m pytest tests -q
