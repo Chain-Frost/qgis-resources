@@ -5,9 +5,11 @@ on:
     paths:
       - "scripts/**"
       - "raster-crs/**"
+      - "CRS_info/**"
       - "tests/**"
       - "ruff.toml"
       - "pyrightconfig.json"
+      - "PYTHON_DEVELOPMENT.md"
       - "pyright-ci.json"
       - "pyright-all.json"
       - "pyright-spatial-audit.json"
@@ -17,9 +19,11 @@ on:
     paths:
       - "scripts/**"
       - "raster-crs/**"
+      - "CRS_info/**"
       - "tests/**"
       - "ruff.toml"
       - "pyrightconfig.json"
+      - "PYTHON_DEVELOPMENT.md"
       - "pyright-ci.json"
       - "pyright-all.json"
       - "pyright-spatial-audit.json"
