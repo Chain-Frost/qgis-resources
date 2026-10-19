@@ -15,19 +15,19 @@ def main() -> int:
     try:
         from qgis import __path__ as qgis_paths
         from qgis.core import Qgis
-        from qgis.PyQt.QtCore import PYQT_VERSION_STR, QT_VERSION_STR
+        from qgis.PyQt.QtCore import PYQT_VERSION_STR, QT_VERSION_STR  # pyright: ignore[reportMissingModuleSource]
     except ImportError as error:
         print(f"PyQGIS import failed: {error}")
         return 1
 
     print(f"Interpreter: {sys.executable}")
-    print(f"QGIS: {Qgis.QGIS_VERSION}")
+    print(f"QGIS: {Qgis.QGIS_VERSION}")  # pyright: ignore[reportAttributeAccessIssue]
     print(f"Python: {sys.version.split()[0]}")
     print(f"Qt: {QT_VERSION_STR}, PyQt: {PYQT_VERSION_STR}")
     for folder in qgis_paths:
         print(f"QGIS module location: {Path(folder).absolute()}")
 
-    if not Qgis.QGIS_VERSION.startswith("4.") or not QT_VERSION_STR.startswith("6."):
+    if not Qgis.QGIS_VERSION.startswith("4.") or not QT_VERSION_STR.startswith("6."):  # pyright: ignore[reportAttributeAccessIssue]
         print("Required environment: QGIS 4 with Qt 6.")
         return 1
     print("Run python -m pyright -p pyrightconfig.json with matching QGIS/PyQt type information.")

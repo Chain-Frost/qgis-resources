@@ -1,7 +1,13 @@
 from qgis.core import QgsLayerTreeGroup, QgsLayerTreeLayer, QgsLayerTreeNode, QgsProject
 
-root = QgsProject.instance().layerTreeRoot()
 project = QgsProject.instance()
+if project is None:
+    msg = "No QGIS project is available"
+    raise RuntimeError(msg)
+root = project.layerTreeRoot()
+if root is None:
+    msg = "QGIS layer-tree root is unavailable"
+    raise RuntimeError(msg)
 
 group_nodes_to_remove: list[QgsLayerTreeGroup] = []
 layer_ids_to_remove: list[str] = []
@@ -42,7 +48,7 @@ project.removeMapLayers(layer_ids_to_remove)
 # Then remove the unchecked group nodes themselves
 for group_node in group_nodes_to_remove:
     parent = group_node.parent()
-    if parent is not None:
+    if isinstance(parent, QgsLayerTreeGroup):
         parent.removeChildNode(group_node)
 
 print(f"Removed {len(layer_ids_to_remove)} layer(s) and {len(group_nodes_to_remove)} group(s).")

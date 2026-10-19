@@ -2,7 +2,7 @@ import os
 from collections import defaultdict
 from pathlib import Path
 
-import processing
+import processing  # pyright: ignore[reportMissingImports] -- QGIS processing plugin is available at runtime
 from qgis.core import (
     Qgis,
     QgsProcessing,
@@ -13,6 +13,9 @@ from qgis.core import (
 )
 
 project = QgsProject.instance()
+if project is None:
+    msg = "No QGIS project is available"
+    raise RuntimeError(msg)
 transform_context = project.transformContext()
 
 # Groups all loaded line layers by their physical DXF file.
@@ -25,10 +28,11 @@ seen_layer_sources: set[str] = set()
 
 def get_physical_path(layer: QgsVectorLayer) -> Path:
     """Extract the physical file path from a QGIS layer source URI."""
-    decoded_uri = QgsProviderRegistry.instance().decodeUri(
-        layer.providerType(),
-        layer.source(),
-    )
+    registry = QgsProviderRegistry.instance()
+    if registry is None:
+        msg = "QGIS provider registry is unavailable"
+        raise RuntimeError(msg)
+    decoded_uri = registry.decodeUri(layer.providerType(), layer.source())
 
     path = decoded_uri.get("path")
 

@@ -2,7 +2,14 @@ from collections import OrderedDict
 
 from qgis.core import QgsProject
 
-root = QgsProject.instance().layerTreeRoot()
+project = QgsProject.instance()
+if project is None:
+    msg = "No QGIS project is available"
+    raise RuntimeError(msg)
+root = project.layerTreeRoot()
+if root is None:
+    msg = "QGIS layer-tree root is unavailable"
+    raise RuntimeError(msg)
 
 
 def LayerNamesEnumDict(listCh):
@@ -12,7 +19,13 @@ def LayerNamesEnumDict(listCh):
 mLNED = LayerNamesEnumDict(root.children())
 mLNEDkeys = OrderedDict(sorted(LayerNamesEnumDict(root.children()).items())).keys()
 
-mLNEDsorted = [mLNED[k].clone() for k in mLNEDkeys]
+mLNEDsorted = []
+for key in mLNEDkeys:
+    cloned = mLNED[key].clone()
+    if cloned is None:
+        msg = f"Could not clone the QGIS layer-tree node {key}"
+        raise RuntimeError(msg)
+    mLNEDsorted.append(cloned)
 root.insertChildNodes(0, mLNEDsorted)
 for n in mLNED.values():
     root.removeChildNode(n)
