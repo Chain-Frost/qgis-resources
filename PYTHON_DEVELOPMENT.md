@@ -10,7 +10,8 @@ backward compatibility is not a goal.
 - Pyright 1.1.414: **strict CI gates** cover the independent project
   parser (`pyright-ci.json`) and the maintained QGIS 4 utilities
   (`pyrightconfig.json`). The latter uses pinned
-  `qgis-stubs==1.0.0.dev2` with PyQt6 type definitions, resolving QGIS
+  the latest compatible `qgis-stubs>=1.0.0.dev0,<2` (including prereleases)
+  with PyQt6 type definitions, resolving QGIS
   members in headless CI without loading actual QGIS binaries. The
   former basic headless baseline has been retired.
 - Pytest: all tests live under the top-level `tests/` directory; pure logic is tested with minimal QGIS mocks in Windows CI.
@@ -26,11 +27,13 @@ backward compatibility is not a goal.
 Locally, from a QGIS-enabled shell (or another Python 3.12 environment):
 
 ```powershell
-python -m pip install ruff==0.16.6 pyright==1.1.414 pytest==9.1.1 qgis-stubs==1.0.0.dev2
+python -m pip install ruff==0.16.6 pyright==1.1.414 pytest==9.1.1 numpy rasterio pyproj
+python -m pip install --pre "qgis-stubs>=1.0.0.dev0,<2"
 python -m ruff check scripts raster-crs tests
 python -m ruff format --check scripts raster-crs tests
 python -m pyright -p pyright-ci.json
 python -m pyright -p pyrightconfig.json
+python -m pyright -p pyright-all.json
 python -m pytest tests -q
 ```
 
@@ -56,15 +59,14 @@ wraps native C++ classes via SIP; Pyright uses the pinned QGIS 4/PyQt6
 stub definitions, which must be checked against the actual bindings
 when APIs evolve. Optional local stubs can be
 placed in `.vscode/qgis-type-stubs`. Generated third-party stubs should
-not be committed. **QGIS 4/Qt6 stubs are available as a prerelease:**
-`qgis-stubs==1.0.0.dev2` (published 10 October 2026). It is pinned in
-CI to evaluate strict Pyright against the maintained QGIS utilities; this
-does **not** provide a running native QGIS environment. The latest stable
-`qgis-stubs==0.5.0` targets QGIS 3/Qt5 and must not be substituted.
-For local validation, use `python -m pip install qgis-stubs==1.0.0.dev2`
-with the installed QGIS 4 environment and verify its declarations against
-the actual QGIS 4 API. Do not treat the prerelease as proven compatible
-with every QGIS 4 minor version.
+not be committed. **QGIS 4/Qt6 stubs** are installed using `python -m pip install --pre
+"qgis-stubs>=1.0.0.dev0,<2"`, selecting the newest available 1.x QGIS
+4-compatible prerelease or final release, rather than freezing a single
+release. The minimum excludes QGIS 3/Qt5 releases (0.x). CI prints
+the resolved version. Future upstream stub changes can expose type
+differences and fail strict CI until reviewed; this is intentional.
+These stubs are static analysis definitions, not a QGIS runtime. Test
+them against the installed QGIS 4 version when API signatures change.
 
 Hosted CI runs **strict Pyright** for the maintained QGIS 4 utilities
 and project parser against the pinned QGIS 4 prerelease stubs. The
@@ -72,6 +74,16 @@ QGIS/Qt bindings themselves are not executed in this environment:
 signatures or behaviours missing or incorrect in the prerelease
 stubs may still produce false negatives. The local QGIS 4 desktop
 checks below remain required before production use.
+
+## Legacy Python audit
+
+CI currently runs `pyright-all.json` over the older `scripts/`,
+`raster-crs/`, and `CRS_info/params3.py` utilities. While
+baseline findings are being addressed the **full repository scan is
+informational**; the maintained scripts remain strict-gated. The
+goal is to make a meaningful Pyright minimum standard mandatory for all
+Python utilities, with no blanket missing-import suppressions and
+real QGIS 4-specific validation for QGIS-dependent functions.
 
 ## Migrated operations
 

@@ -1,0 +1,19 @@
+{
+  "include": [
+    "scripts",
+    "raster-crs",
+    "CRS_info/params3.py"
+  ],
+  "exclude": [
+    "tests",
+    "**/__pycache__"
+  ],
+  "extraPaths": [
+    ".vscode/qgis-type-stubs",
+    "C:/OSGeo4W/apps/qgis/python",
+    "C:/OSGeo4W/apps/qgis/python/plugins"
+  ],
+  "pythonVersion": "3.12",
+  "pythonPlatform": "Windows",
+  "typeCheckingMode": "basic"
+}
