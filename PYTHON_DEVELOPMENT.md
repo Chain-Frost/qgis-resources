@@ -25,11 +25,12 @@ backward compatibility is not a goal.
 Locally, from a QGIS-enabled shell (or another Python 3.12 environment):
 
 ```powershell
-python -m pip install ruff==0.16.6 pyright==1.1.414 pytest==9.1.1
+python -m pip install ruff==0.16.6 pyright==1.1.414 pytest==9.1.1 qgis-stubs==1.0.0.dev2
 python -m ruff check scripts raster-crs tests
 python -m ruff format --check scripts raster-crs tests
 python -m pyright -p pyright-ci.json
 python -m pyright -p pyright-headless.json
+python -m pyright -p pyrightconfig.json  # strict QGIS 4 stubs; diagnostics require review
 python -m pytest tests -q
 ```
 
@@ -54,11 +55,15 @@ locations, failing for incompatible Python, QGIS or Qt versions. PyQGIS
 wraps native C++ classes via SIP; Pyright needs matching QGIS and PyQt6
 type definitions for complete checking. Optional local stubs can be
 placed in `.vscode/qgis-type-stubs`. Generated third-party stubs should
-not be committed. **Do not install the currently published `qgis-stubs` 0.4.0 for QGIS 4:**
-that version targets QGIS 3/Qt5. Upstream identifies `qgis-stubs>=1.0`
-as the QGIS 4/Qt6 generation. Only use a released QGIS 4 version after
-checking it matches your installed QGIS API, or use locally generated
-matching definitions. QGIS 3/Qt5 stubs do not prove QGIS 4 compatibility.
+not be committed. **QGIS 4/Qt6 stubs are available as a prerelease:**
+`qgis-stubs==1.0.0.dev2` (published 10 October 2026). It is pinned in
+CI to evaluate strict Pyright against the maintained QGIS utilities; this
+does **not** provide a running native QGIS environment. The latest stable
+`qgis-stubs==0.5.0` targets QGIS 3/Qt5 and must not be substituted.
+For local validation, use `python -m pip install qgis-stubs==1.0.0.dev2`
+with the installed QGIS 4 environment and verify its declarations against
+the actual QGIS 4 API. Do not treat the prerelease as proven compatible
+with every QGIS 4 minor version.
 
 Hosted CI intentionally has no native QGIS bindings: the headless basic
 gate disables missing-import reports but cannot validate their APIs.
