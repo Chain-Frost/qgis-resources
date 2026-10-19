@@ -77,11 +77,21 @@ def main() -> None:
     if not DEFAULT_ALL_PROJECT_LAYERS and qgis_iface is None:
         message = "QGIS GUI session is required for selecting layers"
         raise RuntimeError(message)
-    source = (
-        QgsProject.instance().mapLayers().values()
-        if DEFAULT_ALL_PROJECT_LAYERS
-        else qgis_iface.layerTreeView().selectedLayers()
-    )
+    if DEFAULT_ALL_PROJECT_LAYERS:
+        project = QgsProject.instance()
+        if project is None:
+            message = "QGIS project is unavailable"
+            raise RuntimeError(message)
+        source = project.mapLayers().values()
+    else:
+        if qgis_iface is None:
+            message = "QGIS GUI session is required for selecting layers"
+            raise RuntimeError(message)
+        view = qgis_iface.layerTreeView()
+        if view is None:
+            message = "QGIS GUI layer-tree view is unavailable"
+            raise RuntimeError(message)
+        source = view.selectedLayers()
     index_layers(
         (layer for layer in source if isinstance(layer, QgsVectorLayer)),
         extensions=DEFAULT_EXTENSIONS,

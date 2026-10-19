@@ -58,7 +58,8 @@ def clean_fields(
             print(f"SKIP already editing: {layer.name()}")
             skipped += 1
             continue
-        available = {field.name(): index for index, field in enumerate(layer.fields())}
+        fields = layer.fields()
+        available = {fields.at(index).name(): index for index in range(fields.count())}
         matching = [name for name in requested if name in available]
         missing = [name for name in requested if name not in available]
         if not matching or (missing and not allow_partial_fields):
@@ -108,7 +109,11 @@ def main() -> None:
     if qgis_iface is None:
         message = "QGIS GUI session is required for selecting layers"
         raise RuntimeError(message)
-    selected = [layer for layer in qgis_iface.layerTreeView().selectedLayers() if isinstance(layer, QgsVectorLayer)]
+    view = qgis_iface.layerTreeView()
+    if view is None:
+        message = "QGIS GUI layer-tree view is unavailable"
+        raise RuntimeError(message)
+    selected = [layer for layer in view.selectedLayers() if isinstance(layer, QgsVectorLayer)]
     clean_fields(
         selected,
         fields_to_delete=DEFAULT_FIELD_NAMES,
