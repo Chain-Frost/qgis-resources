@@ -6,7 +6,6 @@ from qgis.core import (
 )
 from qgis.PyQt.QtGui import QFontDatabase
 
-
 FONT_FAMILY = "Calibri"
 
 # Set to True to remove any data-defined font-family expressions.

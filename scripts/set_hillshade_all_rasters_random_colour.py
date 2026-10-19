@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import random
 
-from qgis.core import QgsProject, QgsRasterLayer, QgsHillshadeRenderer
+from qgis.core import QgsHillshadeRenderer, QgsProject, QgsRasterLayer
 from qgis.PyQt.QtGui import QColor
 
 

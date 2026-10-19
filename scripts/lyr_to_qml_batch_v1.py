@@ -1,6 +1,6 @@
 import os
+
 import processing
-from qgis.core import QgsProject
 
 # Define the root directory to search for .lyr files
 root_dir = r"C:\Temp"

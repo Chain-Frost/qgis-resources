@@ -15,12 +15,16 @@ Allows an optional control-point override for centroid sampling in the QA output
 # → write sink in input polygon CRS + print summary (avg_rainfall | centroid_raster_value)
 # 2025-10-29 version
 from __future__ import annotations
+
 from typing import Any
 
+from qgis import processing
 from qgis.core import (
+    QgsCoordinateReferenceSystem,
+    QgsCoordinateTransform,
+    QgsDistanceArea,
     QgsFeature,
-    QgsField,
-    QgsFields,
+    QgsFeatureSink,
     QgsGeometry,
     QgsPointXY,
     QgsProcessing,
@@ -35,13 +39,7 @@ from qgis.core import (
     QgsProject,
     QgsVectorLayer,
     QgsWkbTypes,
-    QgsDistanceArea,
-    QgsFeatureSink,
-    QgsCoordinateTransform,
-    QgsCoordinateReferenceSystem,
 )
-from qgis.PyQt.QtCore import QVariant
-from qgis import processing
 
 
 class Spatial_rainfall_pattern(QgsProcessingAlgorithm):

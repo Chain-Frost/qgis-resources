@@ -16,8 +16,7 @@ def export_layer_list(group_name, output_file):
     layer_names = sorted([layer.layer().name() for layer in layers])
 
     with open(output_file, "w") as file:
-        for name in layer_names:
-            file.write(name + "\n")
+        file.writelines(name + "\n" for name in layer_names)
 
 
 export_layer_list(group_name, output_file)

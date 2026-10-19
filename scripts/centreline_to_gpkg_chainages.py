@@ -1,11 +1,9 @@
-from collections.abc import Iterable
-from pathlib import Path
 import os
 import shutil
+from collections.abc import Iterable
+from pathlib import Path
 
 import processing
-
-from qgis.PyQt.QtCore import QCoreApplication
 from qgis.core import (
     QgsCoordinateReferenceSystem,
     QgsFeature,
@@ -13,7 +11,7 @@ from qgis.core import (
     QgsVectorLayer,
     QgsWkbTypes,
 )
-
+from qgis.PyQt.QtCore import QCoreApplication
 
 # ---------------------------------------------------------------------------
 # Settings

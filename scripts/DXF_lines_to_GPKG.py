@@ -1,5 +1,5 @@
-from collections import defaultdict
 import os
+from collections import defaultdict
 from pathlib import Path
 
 import processing
@@ -11,7 +11,6 @@ from qgis.core import (
     QgsVectorFileWriter,
     QgsVectorLayer,
 )
-
 
 project = QgsProject.instance()
 transform_context = project.transformContext()
