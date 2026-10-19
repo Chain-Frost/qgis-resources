@@ -83,7 +83,8 @@ CI enforces a **basic Pyright minimum standard** over `scripts/`,
 `pyright-all.json`, excluding only `Spatial_Rainfall_Pattern.py`.
 The four maintained utilities remain subject to **strict Pyright**.
 The rainfall-processing script is independently audited using
-`pyright-spatial-audit.json` (informational). Its baseline contained
+`pyright-spatial-audit.json` (informational). [Issue #5](https://github.com/Chain-Frost/qgis-resources/issues/5)
+tracks the remaining refactor and native QGIS 4 validation. Its baseline contained
 **82 Pyright errors**, largely optional processing outputs, nullable
 providers and over-broad `QgsMapLayer` types. It needs a separate
 behaviour-preserving QGIS 4 refactor with real geospatial test data;
