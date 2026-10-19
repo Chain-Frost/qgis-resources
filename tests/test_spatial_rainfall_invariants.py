@@ -64,6 +64,7 @@ def rainfall_script(monkeypatch: pytest.MonkeyPatch) -> Any:
     )
     for name in names:
         setattr(core, name, type(name, (), {}))
+    core.QgsProcessing.TEMPORARY_OUTPUT = "memory:"  # type: ignore[attr-defined]
     core.QgsPointXY = FakePoint  # type: ignore[attr-defined]
     core.QgsVectorLayer = FakeVectorLayer  # type: ignore[attr-defined]
     core.QgsProject = FakeProject  # type: ignore[attr-defined]
@@ -141,7 +142,7 @@ def test_critical_topology_pipeline_stays_in_order() -> None:
     )
     tree = ast.parse(source)
     algorithms: list[str] = []
-    for node in ast.walk(tree):
+    for node in sorted(ast.walk(tree), key=lambda item: getattr(item, "lineno", -1)):
         if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
             continue
         if node.func.attr != "run" or not isinstance(node.func.value, ast.Name):
@@ -167,8 +168,8 @@ def test_critical_topology_pipeline_stays_in_order() -> None:
         "native:fixgeometries",
         "native:extractbyexpression",
     )
-    # ast.walk enumerates nested call nodes in source order in this function,
-    # but has other algorithms interleaved; compare a source-order subsequence.
+    # Preserve the ordering of topology and cleanup operations, including the
+    # nested nearest-neighbour join; other operations may be interleaved.
     start = 0
     for algorithm_id in expected:
         start = algorithms.index(algorithm_id, start) + 1
