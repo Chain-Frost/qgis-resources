@@ -22,7 +22,8 @@ def export_layer_list(group_name: str, output_file: str | Path) -> None:
         raise ValueError(msg)
 
     layers = group.findLayers()
-    layer_names = sorted(layer.layer().name() for layer in layers if layer.layer() is not None)
+    referenced_layers = [node.layer() for node in layers]
+    layer_names = sorted(layer.name() for layer in referenced_layers if layer is not None)
 
     destination = Path(output_file)
     destination.parent.mkdir(parents=True, exist_ok=True)

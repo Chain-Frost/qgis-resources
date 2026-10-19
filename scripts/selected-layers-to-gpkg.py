@@ -26,11 +26,15 @@ root = project.layerTreeRoot()
 if root is None:
     msg = "QGIS layer-tree root is unavailable"
     raise RuntimeError(msg)
-if iface is None or iface.layerTreeView() is None:
+if iface is None:
+    msg = "QGIS GUI interface is unavailable"
+    raise RuntimeError(msg)
+view = iface.layerTreeView()
+if view is None:
     msg = "QGIS console layer-tree view is unavailable"
     raise RuntimeError(msg)
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-layers = iface.layerTreeView().selectedLayers()
+layers = view.selectedLayers()
 
 for source_layer in layers:
     if not isinstance(source_layer, QgsVectorLayer) or not source_layer.isValid():
