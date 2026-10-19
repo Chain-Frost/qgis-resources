@@ -162,7 +162,9 @@ def _write_atlas(
     if provider is None:
         message = "Cannot initialise the atlas output data provider"
         raise RuntimeError(message)
-    provider.addAttributes([QgsField("theme_name", QMetaType.Type.QString), QgsField("out_name", QMetaType.Type.QString)])
+    provider.addAttributes(
+        [QgsField("theme_name", QMetaType.Type.QString), QgsField("out_name", QMetaType.Type.QString)]
+    )
     temporary.updateFields()
     features: list[QgsFeature] = []
     for row in rows:
