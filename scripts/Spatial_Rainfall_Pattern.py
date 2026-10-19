@@ -16,7 +16,7 @@ Allows an optional control-point override for centroid sampling in the QA output
 # 2025-10-29 version
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from qgis import processing
 from qgis.core import (
@@ -183,10 +183,7 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
         feedback: QgsProcessingFeedback,
     ) -> str:
         """Per-vertex transform (src→dst), snap at build; expects Polygon singleparts; preserves attributes."""
-        src = context.getMapLayer(input_id)
-        if src is None:
-            msg = "Transform: failed to resolve layer."
-            raise QgsProcessingException(msg)
+        src = self._vector_layer(context, input_id)
         if QgsWkbTypes.geometryType(src.wkbType()) != QgsWkbTypes.PolygonGeometry:
             msg = "Transform expects polygonal input."
             raise QgsProcessingException(msg)
@@ -201,6 +198,9 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
             msg = "Transform: failed to create memory layer."
             raise QgsProcessingException(msg)
         dp = mem.dataProvider()
+        if dp is None:
+            msg = "Transform: failed to access memory-layer provider."
+            raise QgsProcessingException(msg)
         dp.addAttributes(src.fields())
         mem.updateFields()
 
@@ -258,9 +258,10 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
         fb = QgsProcessingMultiStepFeedback(60, model_feedback)
         results: dict[str, Any] = {}
 
-        catchment = self.parameterAsVectorLayer(parameters, self.PARAM_CATCHMENT, context)
-        centroid_override = self.parameterAsVectorLayer(parameters, self.PARAM_CENTROID_OVERRIDE, context)
-        raster = self.parameterAsRasterLayer(parameters, self.PARAM_RASTER, context)
+        typed_parameters = cast(dict[str | None, Any], parameters)
+        catchment = self.parameterAsVectorLayer(typed_parameters, self.PARAM_CATCHMENT, context)
+        centroid_override = self.parameterAsVectorLayer(typed_parameters, self.PARAM_CENTROID_OVERRIDE, context)
+        raster = self.parameterAsRasterLayer(typed_parameters, self.PARAM_RASTER, context)
         if catchment is None or raster is None:
             msg = "Missing input layer(s)."
             raise QgsProcessingException(msg)
@@ -380,7 +381,11 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
 
         # DN sampling (and NoData detection)
         rp = raster.dataProvider()
-        no_data_vals = rp.srcNoDataValueList(1) if hasattr(rp, "srcNoDataValueList") else []
+        if rp is None:
+            msg = "Raster data provider is unavailable."
+            raise QgsProcessingException(msg)
+        # Preserve the original optional provider-specific NoData lookup.
+        no_data_vals = rp.srcNoDataValueList(1) if hasattr(rp, "srcNoDataValueList") else []  # pyright: ignore[reportAttributeAccessIssue]
 
         sampled_pts = self._output(processing.run(
             "native:rastersampling",
@@ -425,7 +430,7 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
         ))
         fb.setCurrentStep(10)
 
-        grid_layer = context.getMapLayer(grid_with_dn)
+        grid_layer = self._vector_layer(context, grid_with_dn)
         dn_field = next((f.name() for f in grid_layer.fields() if f.name().lower().startswith("dn_")), None)
         if not dn_field:
             msg = "Raster sampling failed: DN_* field not found."
@@ -459,9 +464,9 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
         fb.setCurrentStep(12)
 
         # Area-weighted average DN (raster CRS)
-        clipped = context.getMapLayer(clipped_id)
+        clipped = self._vector_layer(context, clipped_id)
         d = QgsDistanceArea()
-        d.setEllipsoid(QgsProject.instance().ellipsoid())
+        d.setEllipsoid(self._project().ellipsoid())
         d.setSourceCrs(clipped.crs(), context.transformContext())
         sum_area = 0.0
         sum_area_dn = 0.0
@@ -480,7 +485,7 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
         fb.setCurrentStep(13)
 
         # DN at catchment centroid
-        centroid_layer = context.getMapLayer(centroid_sample)
+        centroid_layer = self._vector_layer(context, centroid_sample)
         centroid_dn_field = next(
             (f.name() for f in centroid_layer.fields() if f.name().lower().startswith("dn_")), None
         )
@@ -629,10 +634,10 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
                 feedback=fb,
                 is_child_algorithm=True,
             )
-            pts_n = context.getMapLayer(pts_final).featureCount()
-            join_n = context.getMapLayer(j["OUTPUT"]).featureCount()
+            pts_n = self._vector_layer(context, pts_final).featureCount()
+            join_n = self._vector_layer(context, self._output(j)).featureCount()
             unjoined = max(0, pts_n - join_n)
-            return j["OUTPUT"], unjoined
+            return self._output(j), unjoined
 
         tol = max(0.2, 2 * self.PRECISION_GRID_M)
         pts_joined, un1 = _nearest_join_once(tol)
@@ -730,8 +735,8 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
             is_child_algorithm=True,
         ))
 
-        before_cnt = context.getMapLayer(post_fixed).featureCount()
-        after_cnt = context.getMapLayer(post_kept).featureCount()
+        before_cnt = self._vector_layer(context, post_fixed).featureCount()
+        after_cnt = self._vector_layer(context, post_kept).featureCount()
         removed_cnt = max(0, before_cnt - after_cnt)
         fb.pushInfo(f"[Final buffer] Removed {removed_cnt} feature(s) with area < 1 m².")
         processing.run(
@@ -750,8 +755,8 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
         dqa = QgsDistanceArea()
         dqa.setEllipsoid("")
         dqa.setSourceCrs(target_crs, context.transformContext())
-        parts_layer = context.getMapLayer(post_kept)
-        diss_layer = context.getMapLayer(qa_diss)
+        parts_layer = self._vector_layer(context, post_kept)
+        diss_layer = self._vector_layer(context, qa_diss)
         sum_parts = sum(
             dqa.measureArea(f.geometry())
             for f in parts_layer.getFeatures()
@@ -766,10 +771,7 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
 
         # ----- Write final sink in input polygon CRS -----
         layer_to_write_id = post_kept
-        post_layer = context.getMapLayer(post_kept)
-        if post_layer is None:
-            msg = "Final layer not found in context."
-            raise QgsProcessingException(msg)
+        post_layer = self._vector_layer(context, post_kept)
         if post_layer.crs() != target_crs:
             layer_to_write_id = self._output(processing.run(
                 "native:reprojectlayer",
@@ -783,10 +785,10 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
                 feedback=fb,
                 is_child_algorithm=True,
             ))
-            post_layer = context.getMapLayer(layer_to_write_id)
+            post_layer = self._vector_layer(context, layer_to_write_id)
 
         sink, sink_id = self.parameterAsSink(
-            parameters, self.PARAM_OUT, context, post_layer.fields(), post_layer.wkbType(), target_crs
+            typed_parameters, self.PARAM_OUT, context, post_layer.fields(), post_layer.wkbType(), target_crs
         )
         if sink is None:
             msg = "Failed to create final output sink."
