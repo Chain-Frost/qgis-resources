@@ -38,9 +38,7 @@ def export_theme_vectors() -> tuple[int, int]:
         options = QgsVectorFileWriter.SaveVectorOptions()
         options.driverName = "ESRI Shapefile"
         options.fileEncoding = "UTF-8"
-        result = QgsVectorFileWriter.writeAsVectorFormatV3(
-            layer, str(destination), project.transformContext(), options
-        )
+        result = QgsVectorFileWriter.writeAsVectorFormatV3(layer, str(destination), project.transformContext(), options)
         if result[0] != QgsVectorFileWriter.NoError:
             msg = f"Could not export {layer.name()}: {result}"
             raise RuntimeError(msg)
