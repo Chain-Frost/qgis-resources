@@ -4,7 +4,7 @@ from qgis.core import (
     QgsProperty,
     QgsVectorLayer,
 )
-from qgis.PyQt.QtGui import QFontDatabase
+from qgis.PyQt.QtGui import QFontDatabase  # pyright: ignore[reportMissingModuleSource]
 from qgis.utils import iface
 
 FONT_FAMILY = "Calibri"
@@ -26,6 +26,9 @@ if font_key not in installed_fonts:
 resolved_font_family = installed_fonts[font_key]
 
 project = QgsProject.instance()
+if project is None:
+    msg = "No QGIS project is available"
+    raise RuntimeError(msg)
 
 updated_layers: list[str] = []
 skipped_layers: list[str] = []
@@ -112,7 +115,10 @@ for layer in project.mapLayers().values():
 if updated_layers:
     project.setDirty(True)
 
-iface.mapCanvas().refresh()
+if iface is not None:
+    canvas = iface.mapCanvas()
+    if canvas is not None:
+        canvas.refresh()
 
 
 print(f"Updated {len(updated_layers)} layer(s) to {resolved_font_family}.")
