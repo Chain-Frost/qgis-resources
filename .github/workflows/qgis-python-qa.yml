@@ -28,32 +28,11 @@ jobs:
           python-version: "3.12"
       - name: Install pinned development tools
         run: python -m pip install ruff==0.16.6 pyright==1.1.414 pytest==9.1.1
-      - name: Ruff lint maintained scripts and tests
-        run: >-
-          python -m ruff check
-          scripts/cleanup_geopackage_fields.py
-          scripts/create_spatial_indexes.py
-          scripts/LotsOfThemes/create_new_themes_from_list.py
-          scripts/LotsOfThemes/tests/
-          scripts/tests/
-      - name: Ruff format maintained scripts and tests
-        run: >-
-          python -m ruff format --check
-          scripts/cleanup_geopackage_fields.py
-          scripts/create_spatial_indexes.py
-          scripts/LotsOfThemes/create_new_themes_from_list.py
-          scripts/LotsOfThemes/tests/
-          scripts/tests/
+      - name: Ruff lint all repository QGIS Python
+        run: python -m ruff check scripts raster-crs
+      - name: Ruff format all repository QGIS Python
+        run: python -m ruff format --check scripts raster-crs
       - name: Pyright Python 3.12 compatibility
         run: python -m pyright -p pyrightconfig.json
       - name: Test pure Python logic (QGIS mocked)
         run: python -m pytest scripts/LotsOfThemes/tests scripts/tests -q
-      - name: Ruff lint all repository QGIS Python
-        run: python -m ruff check scripts raster-crs
-      - name: Preview repository-wide Ruff formatting (informational)
-        shell: pwsh
-        run: |
-          Write-Host "BEGIN_FORMAT_DIFF"
-          python -m ruff format scripts raster-crs --diff
-          Write-Host "END_FORMAT_DIFF"
-          exit 0

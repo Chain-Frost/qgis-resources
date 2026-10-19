@@ -15,17 +15,18 @@ backward compatibility is not a goal.
   These tests do **not** verify native processing, GeoPackage writes, QGIS
   editing-provider behaviour, or real map themes. Manual QGIS 4 validation
   is necessary before approving those workflows.
-- Legacy one-off scripts remain in their original locations; new or
-  actively maintained scripts are subject to lint/format and CI checks.
-  The CI also reports repository-wide Ruff debt without blocking all
-  development on unrelated historical code.
+- All tracked Python files under `scripts/` and `raster-crs/`, including
+  legacy one-off utilities, are now Ruff-lint and Ruff-format clean.
+  Both checks run as required gates in Windows/Python 3.12 CI. This
+  mechanical cleanup does not imply functional validation or ongoing
+  support for every legacy QGIS-console script.
 
 Locally, from a QGIS-enabled shell (or another Python 3.12 environment):
 
 ```powershell
 python -m pip install ruff==0.16.6 pyright==1.1.414 pytest==9.1.1
-python -m ruff check scripts/cleanup_geopackage_fields.py scripts/create_spatial_indexes.py
-python -m ruff format --check scripts/cleanup_geopackage_fields.py scripts/create_spatial_indexes.py
+python -m ruff check scripts raster-crs
+python -m ruff format --check scripts raster-crs
 python -m pyright -p pyrightconfig.json
 python -m pytest scripts/tests scripts/LotsOfThemes/tests -q
 ```

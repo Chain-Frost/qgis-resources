@@ -13,6 +13,9 @@ checked out at `qgis-resources/` as a submodule of that repository.
   [TUFLOW model notes](processing-models/tuflow/README.md) describe the culvert workbook and its generated tables.
 - `scripts/`: scripts intended to run from the QGIS Python console or a configured PyQGIS environment.
 
+See [Python development and QGIS 4 validation](PYTHON_DEVELOPMENT.md) for the Windows/Python 3.12
+baseline, Ruff and Pyright configuration, and validation requirements.
+
 Workbooks are managed with Git LFS. Install Git LFS before cloning directly:
 
 ```powershell
