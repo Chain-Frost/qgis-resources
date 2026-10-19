@@ -84,6 +84,9 @@ def remove_project_layers_using_file(file_path: Path) -> None:
     """Remove project layers that reference the specified file."""
     target_path = normalised_path(file_path)
     project = QgsProject.instance()
+    if project is None:
+        msg = "QGIS project is unavailable"
+        raise RuntimeError(msg)
 
     layer_ids = [
         layer.id()
