@@ -277,7 +277,12 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
         cat_r_id = self._output(
             processing.run(
                 "native:reprojectlayer",
-                {"INPUT": catchment, "TARGET_CRS": raster_crs, "OPERATION": "", "OUTPUT": QgsProcessing.TEMPORARY_OUTPUT},
+                {
+                    "INPUT": catchment,
+                    "TARGET_CRS": raster_crs,
+                    "OPERATION": "",
+                    "OUTPUT": QgsProcessing.TEMPORARY_OUTPUT,
+                },
                 context=context,
                 feedback=fb,
                 is_child_algorithm=True,
@@ -297,7 +302,12 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
             cat_diss_id = self._output(
                 processing.run(
                     "native:dissolve",
-                    {"INPUT": cat_r_id, "FIELD": [], "SEPARATE_DISJOINT": False, "OUTPUT": QgsProcessing.TEMPORARY_OUTPUT},
+                    {
+                        "INPUT": cat_r_id,
+                        "FIELD": [],
+                        "SEPARATE_DISJOINT": False,
+                        "OUTPUT": QgsProcessing.TEMPORARY_OUTPUT,
+                    },
                     context=context,
                     feedback=fb,
                     is_child_algorithm=True,
@@ -408,7 +418,12 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
         sampled_pts = self._output(
             processing.run(
                 "native:rastersampling",
-                {"INPUT": pts_id, "RASTERCOPY": raster, "COLUMN_PREFIX": "DN_", "OUTPUT": QgsProcessing.TEMPORARY_OUTPUT},
+                {
+                    "INPUT": pts_id,
+                    "RASTERCOPY": raster,
+                    "COLUMN_PREFIX": "DN_",
+                    "OUTPUT": QgsProcessing.TEMPORARY_OUTPUT,
+                },
                 context=context,
                 feedback=fb,
                 is_child_algorithm=True,
