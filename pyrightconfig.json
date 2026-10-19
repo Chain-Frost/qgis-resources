@@ -2,16 +2,19 @@
   "include": [
     "scripts/cleanup_geopackage_fields.py",
     "scripts/create_spatial_indexes.py",
-    "scripts/LotsOfThemes/create_new_themes_from_list.py"
+    "scripts/LotsOfThemes/create_new_themes_from_list.py",
+    "scripts/qgis-file-parser.py"
   ],
   "exclude": [
     "tests",
     "**/__pycache__"
   ],
+  "extraPaths": [
+    ".vscode/qgis-type-stubs",
+    "C:/OSGeo4W/apps/qgis/python",
+    "C:/OSGeo4W/apps/qgis/python/plugins"
+  ],
   "pythonVersion": "3.12",
   "pythonPlatform": "Windows",
-  "typeCheckingMode": "basic",
-  "reportMissingImports": "none",
-  "reportMissingModuleSource": "none",
-  "reportUndefinedVariable": "error"
+  "typeCheckingMode": "strict"
 }

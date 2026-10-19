@@ -3,7 +3,7 @@ from __future__ import annotations
 import random
 
 from qgis.core import QgsHillshadeRenderer, QgsProject, QgsRasterLayer
-from qgis.PyQt.QtGui import QColor
+from qgis.PyQt.QtGui import QColor  # pyright: ignore[reportMissingModuleSource]
 
 
 def _rand_nice_color() -> QColor:
@@ -17,23 +17,12 @@ def _make_hillshade_renderer(layer: QgsRasterLayer, band: int, z_factor: float, 
     Try common signatures.
     """
     provider = layer.dataProvider()
-
-    # QGIS 3.38+ docs: (input, band, lightAzimuth, lightAltitude)
-    try:
-        r = QgsHillshadeRenderer(provider, band, azimuth, altitude)
-        if hasattr(r, "setZFactor"):
-            r.setZFactor(z_factor)
-        return r
-    except TypeError:
-        pass
-
-    # Older builds: (input, band, zFactor, azimuth, altitude)
-    try:
-        r = QgsHillshadeRenderer(provider, band, z_factor, azimuth, altitude)
-        return r
-    except TypeError as e:
-        msg = f"Cannot construct QgsHillshadeRenderer on this QGIS build: {e}"
-        raise TypeError(msg) from e
+    if provider is None:
+        msg = f"Raster provider is unavailable: {layer.name()}"
+        raise RuntimeError(msg)
+    renderer = QgsHillshadeRenderer(provider, band, azimuth, altitude)
+    renderer.setZFactor(z_factor)
+    return renderer
 
 
 def set_all_rasters_to_hillshade_and_random_color(
@@ -42,7 +31,11 @@ def set_all_rasters_to_hillshade_and_random_color(
     altitude: float = 45.0,
     colorize_strength: int = 70,  # 0..100
 ) -> None:
-    for lyr in QgsProject.instance().mapLayers().values():
+    project = QgsProject.instance()
+    if project is None:
+        msg = "No QGIS project is available"
+        raise RuntimeError(msg)
+    for lyr in project.mapLayers().values():
         if not isinstance(lyr, QgsRasterLayer):
             continue
         if not lyr.isValid():
@@ -55,6 +48,9 @@ def set_all_rasters_to_hillshade_and_random_color(
         # Colorize the *rendered* output (works well with hillshade)
         c = _rand_nice_color()
         f = lyr.hueSaturationFilter()
+        if f is None:
+            print(f"SKIP no hue/saturation filter: {lyr.name()}")
+            continue
         f.setColorizeOn(True)
         f.setColorizeColor(c)
         f.setColorizeStrength(int(max(0, min(100, colorize_strength))))

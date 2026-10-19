@@ -36,10 +36,12 @@ def _source_filename(layer) -> str:
     Falls back to the layer name if it cannot be resolved.
     """
     provider = layer.providerType()
-    uri = layer.dataProvider().dataSourceUri()
+    layer_provider = layer.dataProvider()
+    uri = layer_provider.dataSourceUri() if layer_provider is not None else layer.source()
 
     # Try provider metadata decode (works for ogr/gdal etc.)
-    md = QgsProviderRegistry.instance().providerMetadata(provider)
+    registry = QgsProviderRegistry.instance()
+    md = registry.providerMetadata(provider) if registry is not None else None
     if md is not None and hasattr(md, "decodeUri"):
         try:
             parts = md.decodeUri(uri)
@@ -63,7 +65,9 @@ def list_current_layers_crs(
     skipping those whose CRS EPSG code is in exclude_epsg.
     """
     project = QgsProject.instance()
-
+    if project is None:
+        msg = "No QGIS project is available"
+        raise RuntimeError(msg)
     for layer in project.mapLayers().values():
         code = _epsg_code(layer)
         if code is not None and code in exclude_epsg:

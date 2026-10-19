@@ -1,1 +1,4 @@
 ~$*.xlsx
+
+# Local QGIS/PyQt typing definitions are installation-specific and are not source.
+.vscode/qgis-type-stubs/

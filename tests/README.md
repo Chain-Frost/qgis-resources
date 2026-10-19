@@ -3,6 +3,8 @@
 All Python tests for `qgis-resources` belong under this top-level directory.
 
 - `test_theme_index.py`: theme name parsing and atlas index metadata.
+- `test_spatial_rainfall_invariants.py`: mocked guards for previously
+  field-proven snapping, ring closure, fallback repair and topology order.
 - `test_qgis_data_operations.py`: GeoPackage field cleanup and spatial index logic.
 
 Tests requiring a QGIS runtime should use appropriately marked fixtures and

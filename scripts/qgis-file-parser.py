@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 from urllib.parse import ParseResult, unquote, urlparse
-from urllib.request import url2pathname
+from urllib.request import url2pathname  # pyright: ignore[reportDeprecated]
 from xml.etree import ElementTree
 from zipfile import BadZipFile, ZipFile
 
@@ -309,7 +309,7 @@ def extract_key_value_path(*, source: str) -> str | None:
 
 def file_url_to_path_text(*, url_text: str) -> str:
     parsed: ParseResult = urlparse(url_text)
-    local_path: str = url2pathname(unquote(parsed.path))
+    local_path: str = url2pathname(unquote(parsed.path))  # pyright: ignore[reportDeprecated]
     if parsed.netloc:
         return f"//{parsed.netloc}{local_path}"
     return local_path

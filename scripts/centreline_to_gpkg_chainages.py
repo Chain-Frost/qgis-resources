@@ -3,7 +3,7 @@ import shutil
 from collections.abc import Iterable
 from pathlib import Path
 
-import processing
+import processing  # pyright: ignore[reportMissingImports] -- QGIS processing plugin is runtime-only
 from qgis.core import (
     QgsCoordinateReferenceSystem,
     QgsFeature,
@@ -11,7 +11,7 @@ from qgis.core import (
     QgsVectorLayer,
     QgsWkbTypes,
 )
-from qgis.PyQt.QtCore import QCoreApplication
+from qgis.PyQt.QtCore import QCoreApplication  # pyright: ignore[reportMissingModuleSource]
 
 # ---------------------------------------------------------------------------
 # Settings
@@ -84,6 +84,9 @@ def remove_project_layers_using_file(file_path: Path) -> None:
     """Remove project layers that reference the specified file."""
     target_path = normalised_path(file_path)
     project = QgsProject.instance()
+    if project is None:
+        msg = "QGIS project is unavailable"
+        raise RuntimeError(msg)
 
     layer_ids = [
         layer.id()
@@ -246,6 +249,9 @@ def extract_longest_line(
         raise RuntimeError(msg)
 
     provider = memory_layer.dataProvider()
+    if provider is None:
+        msg = f"Temporary vector provider is unavailable: {source_name}"
+        raise RuntimeError(msg)
     provider.addAttributes(source_layer.fields())
     memory_layer.updateFields()
 
@@ -367,7 +373,11 @@ def process_dxf(
             msg = f"The layer was created, but the adjacent QML could not be loaded: {style_message}"
             raise RuntimeError(msg)
 
-        QgsProject.instance().addMapLayer(output_layer)
+        project = QgsProject.instance()
+        if project is None:
+            msg = "QGIS project is unavailable for adding the chainage layer"
+            raise RuntimeError(msg)
+        project.addMapLayer(output_layer)
         output_layer.triggerRepaint()
         QCoreApplication.processEvents()
 

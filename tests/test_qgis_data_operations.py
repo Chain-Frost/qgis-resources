@@ -41,6 +41,17 @@ class FakeField:
         return self._name
 
 
+class FakeFields:
+    def __init__(self, names: list[str]) -> None:
+        self.names = names
+
+    def count(self) -> int:
+        return len(self.names)
+
+    def at(self, index: int) -> FakeField:
+        return FakeField(self.names[index])
+
+
 class FakeProvider:
     def __init__(self, *, capabilities: int = 64, works: bool = True) -> None:
         self._capabilities = capabilities
@@ -88,8 +99,8 @@ class FakeLayer:
     def isEditable(self) -> bool:
         return self.editable
 
-    def fields(self) -> list[FakeField]:
-        return [FakeField(name) for name in self.field_names]
+    def fields(self) -> FakeFields:
+        return FakeFields(self.field_names)
 
     def startEditing(self) -> bool:
         self.editable = True

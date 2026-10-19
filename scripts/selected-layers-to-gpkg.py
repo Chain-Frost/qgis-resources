@@ -2,15 +2,15 @@ import re
 from pathlib import Path
 
 from qgis.core import (
+    QgsLayerTreeGroup,
     QgsMapLayerStyle,
     QgsProject,
     QgsVectorFileWriter,
     QgsVectorLayer,
 )
-from qgis.utils import iface
+from qgis.utils import iface  # pyright: ignore[reportMissingTypeStubs]
 
 OUTPUT_DIR = Path(r"E:\path\data")
-OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def safe_filename(name: str) -> str:
@@ -19,12 +19,25 @@ def safe_filename(name: str) -> str:
 
 
 project = QgsProject.instance()
+if project is None:
+    msg = "No QGIS project is available"
+    raise RuntimeError(msg)
 root = project.layerTreeRoot()
-
-layers = iface.layerTreeView().selectedLayers()
+if root is None:
+    msg = "QGIS layer-tree root is unavailable"
+    raise RuntimeError(msg)
+if iface is None:
+    msg = "QGIS GUI interface is unavailable"
+    raise RuntimeError(msg)
+view = iface.layerTreeView()
+if view is None:
+    msg = "QGIS console layer-tree view is unavailable"
+    raise RuntimeError(msg)
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+layers = view.selectedLayers()
 
 for source_layer in layers:
-    if not source_layer.isValid():
+    if not isinstance(source_layer, QgsVectorLayer) or not source_layer.isValid():
         print(f"SKIPPED invalid layer: {source_layer.name()}")
         continue
 
@@ -36,6 +49,9 @@ for source_layer in layers:
         continue
 
     parent_group = source_node.parent()
+    if not isinstance(parent_group, QgsLayerTreeGroup):
+        print(f"SKIPPED - no parent layer group: {source_layer.name()}")
+        continue
 
     # Capture the complete current QGIS style.
     source_style = QgsMapLayerStyle()
@@ -43,6 +59,9 @@ for source_layer in layers:
 
     # Output filename.
     output_path = OUTPUT_DIR / f"{safe_filename(source_layer.name())}.gpkg"
+    if output_path.exists():
+        print(f"SKIPPED existing output: {output_path}")
+        continue
 
     options = QgsVectorFileWriter.SaveVectorOptions()
     options.driverName = "GPKG"

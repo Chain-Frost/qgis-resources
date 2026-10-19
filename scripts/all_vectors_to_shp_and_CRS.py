@@ -99,6 +99,9 @@ def main() -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     project = QgsProject.instance()
+    if project is None:
+        msg = "No QGIS project is available"
+        raise RuntimeError(msg)
     transform_context = project.transformContext()
     target_crs = QgsCoordinateReferenceSystem(TARGET_EPSG)
 
@@ -145,7 +148,6 @@ def main() -> None:
         options.driverName = "ESRI Shapefile"
         options.fileEncoding = "UTF-8"
         options.attributesExportNames = field_names
-        options.destCRS = target_crs
 
         # Explicit transform: this is the important part for reprojection
         options.ct = QgsCoordinateTransform(source_crs, target_crs, project)

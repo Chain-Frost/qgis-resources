@@ -5,6 +5,7 @@ import shutil
 from pathlib import Path
 
 from qgis.core import (
+    Qgis,
     QgsLayerDefinition,
     QgsMapLayer,
     QgsProject,
@@ -123,14 +124,17 @@ def save_qml(layer: QgsMapLayer, qml_path: Path) -> tuple[bool, str]:
 
 
 def export_qlr_for_layer(layer: QgsMapLayer, qlr_path: Path) -> tuple[bool, str]:
-    root = QgsProject.instance().layerTreeRoot()
+    project = QgsProject.instance()
+    if project is None:
+        return False, "QGIS project is unavailable"
+    root = project.layerTreeRoot()
+    if root is None:
+        return False, "QGIS layer tree is unavailable"
     node = root.findLayer(layer.id())
     if node is None:
         return False, "Layer tree node not found"
 
-    error_message = ""
-    ok = QgsLayerDefinition.exportLayerDefinition(str(qlr_path), [node], error_message)
-    return ok, error_message
+    return QgsLayerDefinition.exportLayerDefinition(str(qlr_path), [node], Qgis.FilePathType.Relative)
 
 
 def classify_layer_source(layer: QgsMapLayer) -> tuple[str, Path | None]:
@@ -158,7 +162,8 @@ def classify_layer_source(layer: QgsMapLayer) -> tuple[str, Path | None]:
     }:
         return "remote", None
 
-    parts = QgsProviderRegistry.instance().decodeUri(provider, uri) or {}
+    registry = QgsProviderRegistry.instance()
+    parts = registry.decodeUri(provider, uri) if registry is not None else {}
 
     path_value = parts.get("path")
     url_value = parts.get("url")
@@ -187,7 +192,13 @@ def classify_layer_source(layer: QgsMapLayer) -> tuple[str, Path | None]:
 
 def main() -> None:
     project = QgsProject.instance()
+    if project is None:
+        msg = "QGIS project is unavailable"
+        raise RuntimeError(msg)
     themes = project.mapThemeCollection()
+    if themes is None:
+        msg = "QGIS map-theme collection is unavailable"
+        raise RuntimeError(msg)
 
     if THEME_NAME not in themes.mapThemes():
         msg = f"Theme not found: {THEME_NAME}. Available: {themes.mapThemes()}"

@@ -26,7 +26,7 @@ import re
 from collections.abc import Iterable
 from uuid import uuid4
 
-from qgis.core import (
+from qgis.core import (  # pyright: ignore[reportMissingTypeStubs] -- SIP-generated API uses _core.pyi
     QgsFeature,
     QgsField,
     QgsGeometry,
@@ -41,7 +41,7 @@ from qgis.core import (
     QgsVectorLayer,
     QgsWkbTypes,
 )
-from qgis.PyQt.QtCore import QVariant
+from qgis.PyQt.QtCore import QMetaType  # pyright: ignore[reportMissingModuleSource]
 
 
 def _iter_nodes(group: QgsLayerTreeGroup) -> Iterable[QgsLayerTreeGroup | QgsLayerTreeLayer]:
@@ -61,8 +61,13 @@ def _find_layer(project: QgsProject, name: str) -> QgsMapLayer:
     return matches[0]
 
 
-def _create_theme(project: QgsProject, base_layer_ids: set[str], target_id: str) -> object:
+def _create_theme(
+    project: QgsProject, base_layer_ids: set[str], target_id: str
+) -> QgsMapThemeCollection.MapThemeRecord:
     root = project.layerTreeRoot()
+    if root is None:
+        message = "QGIS project has no layer-tree root"
+        raise RuntimeError(message)
     nodes = list(_iter_nodes(root))
     original = [(node, node.itemVisibilityChecked()) for node in nodes]
     try:
@@ -154,7 +159,12 @@ def _write_atlas(
     temporary = QgsVectorLayer("Point", "theme_index", "memory")
     temporary.setCrs(layer.crs())
     provider = temporary.dataProvider()
-    provider.addAttributes([QgsField("theme_name", QVariant.String), QgsField("out_name", QVariant.String)])
+    if provider is None:
+        message = "Cannot initialise the atlas output data provider"
+        raise RuntimeError(message)
+    provider.addAttributes(
+        [QgsField("theme_name", QMetaType.Type.QString), QgsField("out_name", QMetaType.Type.QString)]
+    )
     temporary.updateFields()
     features: list[QgsFeature] = []
     for row in rows:
@@ -196,11 +206,17 @@ def main(
 ) -> list[str]:
     """Create themes from one base theme; optionally generate atlas-point index."""
     project = QgsProject.instance()
+    if project is None:
+        message = "QGIS project is not available"
+        raise RuntimeError(message)
     root = Path(working_directory).absolute()
     list_path = (root / layer_list_file).absolute()
     with list_path.open(encoding="utf-8") as stream:
         requested = list(dict.fromkeys(line.strip() for line in stream if line.strip()))
     collection = project.mapThemeCollection()
+    if collection is None:
+        message = "QGIS project has no map-theme collection"
+        raise RuntimeError(message)
     if not collection.hasMapTheme(base_theme_name):
         message = f"Missing base map theme: {base_theme_name}"
         raise ValueError(message)

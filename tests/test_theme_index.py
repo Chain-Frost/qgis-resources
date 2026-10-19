@@ -19,7 +19,7 @@ def theme_script(monkeypatch: pytest.MonkeyPatch) -> Any:
     qt.__path__ = []  # type: ignore[attr-defined]
     qtcore = ModuleType("qgis.PyQt.QtCore")
     core = ModuleType("qgis.core")
-    qtcore.QVariant = type("QVariant", (), {"String": "string"})  # type: ignore[attr-defined]
+    qtcore.QMetaType = type("QMetaType", (), {"Type": type("Type", (), {"QString": "string"})})  # type: ignore[attr-defined]
     class_names = [
         "QgsFeature",
         "QgsField",

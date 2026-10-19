@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-import processing
+import processing  # pyright: ignore[reportMissingImports] -- third-party SLYR processing provider
 
 # Define the root directory to search for .lyr files
 root_dir = r"C:\Temp"

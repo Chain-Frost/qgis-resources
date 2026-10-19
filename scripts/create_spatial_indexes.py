@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-    from qgis.core import QgsVectorLayer
+    from qgis.core import QgsVectorLayer  # pyright: ignore[reportMissingTypeStubs]
 
 SCRIPT_VERSION = "2026-10-19.1"
 DEFAULT_EXTENSIONS: tuple[str, ...] = (".shp",)
@@ -38,7 +38,7 @@ def index_layers(
     dry_run: bool = DEFAULT_DRY_RUN,
 ) -> tuple[int, int, int]:
     """Return (indexed-or-planned, skipped, failed); skip existing shapefile QIX."""
-    from qgis.core import Qgis
+    from qgis.core import Qgis  # pyright: ignore[reportMissingTypeStubs]
 
     created = skipped = failed = 0
     for layer in layers:
@@ -71,17 +71,27 @@ def index_layers(
 
 def main() -> None:
     """Use all project layers or only the current QGIS selection."""
-    from qgis.core import QgsProject, QgsVectorLayer
-    from qgis.utils import iface as qgis_iface
+    from qgis.core import QgsProject, QgsVectorLayer  # pyright: ignore[reportMissingTypeStubs]
+    from qgis.utils import iface as qgis_iface  # pyright: ignore[reportMissingTypeStubs]
 
     if not DEFAULT_ALL_PROJECT_LAYERS and qgis_iface is None:
         message = "QGIS GUI session is required for selecting layers"
         raise RuntimeError(message)
-    source = (
-        QgsProject.instance().mapLayers().values()
-        if DEFAULT_ALL_PROJECT_LAYERS
-        else qgis_iface.layerTreeView().selectedLayers()
-    )
+    if DEFAULT_ALL_PROJECT_LAYERS:
+        project = QgsProject.instance()
+        if project is None:
+            message = "QGIS project is unavailable"
+            raise RuntimeError(message)
+        source = project.mapLayers().values()
+    else:
+        if qgis_iface is None:
+            message = "QGIS GUI session is required for selecting layers"
+            raise RuntimeError(message)
+        view = qgis_iface.layerTreeView()
+        if view is None:
+            message = "QGIS GUI layer-tree view is unavailable"
+            raise RuntimeError(message)
+        source = view.selectedLayers()
     index_layers(
         (layer for layer in source if isinstance(layer, QgsVectorLayer)),
         extensions=DEFAULT_EXTENSIONS,
