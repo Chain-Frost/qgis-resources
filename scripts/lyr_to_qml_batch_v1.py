@@ -1,6 +1,7 @@
 import os
+from pathlib import Path
+
 import processing
-from qgis.core import QgsProject
 
 # Define the root directory to search for .lyr files
 root_dir = r"C:\Temp"
@@ -13,8 +14,8 @@ for subdir, _, files in os.walk(root_dir):
 
     for file in files:
         if file.endswith(".lyr"):
-            lyr_file = os.path.join(subdir, file)
-            qml_file = os.path.splitext(lyr_file)[0] + ".qml"
+            lyr_file = str(Path(subdir) / file)
+            qml_file = str(Path(lyr_file).with_suffix(".qml"))
             print(f"Processing {lyr_file}...")  # Notify when a .lyr file is being processed
 
             try:

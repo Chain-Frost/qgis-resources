@@ -24,7 +24,8 @@ def create_sample(epsg: int, datum: str, zone: int) -> Path:
     projected_easting, northing = transformer.transform(longitude, LATITUDE)
 
     if abs(projected_easting - EASTING) > 0.001:
-        raise ValueError(f"EPSG:{epsg} produced unexpected easting {projected_easting:.3f} m")
+        msg = f"EPSG:{epsg} produced unexpected easting {projected_easting:.3f} m"
+        raise ValueError(msg)
 
     path: Path = OUTPUT_DIR / f"crs_{datum}_MGA_zone{zone}_EPSG{epsg}.tif"
     transform = from_origin(

@@ -6,21 +6,25 @@ rebuild topology, apply an inward buffer, and write the final singlepart polygon
 Allows an optional control-point override for centroid sampling in the QA output.
 """
 
-# Spatial_Rainfall_Pattern – QGIS 3.44.3
+# Spatial_Rainfall_Pattern - historical QGIS 3.44.3 (QGIS 4 validation pending)
 # Per-cell grid (no dissolve) → PoS raster sampling → NoData filter → clip in raster CRS
 # → area-weighted average → add f1,f2 on clipped cells
 # → per-vertex reprojection + mm snap (to input polygon CRS)
 # → topology rebuild → PoS attribute restore
-# → final inward buffer (−0.5 m, miter) → drop <1 m² → singleparts
+# → final inward buffer (-0.5 m, miter) → drop <1 m² → singleparts
 # → write sink in input polygon CRS + print summary (avg_rainfall | centroid_raster_value)
 # 2025-10-29 version
 from __future__ import annotations
+
 from typing import Any
 
+from qgis import processing
 from qgis.core import (
+    QgsCoordinateReferenceSystem,
+    QgsCoordinateTransform,
+    QgsDistanceArea,
     QgsFeature,
-    QgsField,
-    QgsFields,
+    QgsFeatureSink,
     QgsGeometry,
     QgsPointXY,
     QgsProcessing,
@@ -35,13 +39,7 @@ from qgis.core import (
     QgsProject,
     QgsVectorLayer,
     QgsWkbTypes,
-    QgsDistanceArea,
-    QgsFeatureSink,
-    QgsCoordinateTransform,
-    QgsCoordinateReferenceSystem,
 )
-from qgis.PyQt.QtCore import QVariant
-from qgis import processing
 
 
 class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
@@ -140,7 +138,8 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
                 is_child_algorithm=True,
             )["OUTPUT"]
         except Exception as e:
-            raise QgsProcessingException(f"Geometry repair failed (fixgeometries/buffer 0). Error: {e}")
+            msg = f"Geometry repair failed (fixgeometries/buffer 0). Error: {e}"
+            raise QgsProcessingException(msg) from e
 
     def _transform_snap_polygons(
         self,
@@ -154,9 +153,11 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
         """Per-vertex transform (src→dst), snap at build; expects Polygon singleparts; preserves attributes."""
         src = context.getMapLayer(input_id)
         if src is None:
-            raise QgsProcessingException("Transform: failed to resolve layer.")
+            msg = "Transform: failed to resolve layer."
+            raise QgsProcessingException(msg)
         if QgsWkbTypes.geometryType(src.wkbType()) != QgsWkbTypes.PolygonGeometry:
-            raise QgsProcessingException("Transform expects polygonal input.")
+            msg = "Transform expects polygonal input."
+            raise QgsProcessingException(msg)
 
         uri = f"Polygon?crs={dst_crs.authid()}"
         if QgsWkbTypes.hasZ(src.wkbType()):
@@ -165,7 +166,8 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
             uri += "&mDimension=1"
         mem = QgsVectorLayer(uri, "reproj_snapped", "memory")
         if not mem.isValid():
-            raise QgsProcessingException("Transform: failed to create memory layer.")
+            msg = "Transform: failed to create memory layer."
+            raise QgsProcessingException(msg)
         dp = mem.dataProvider()
         dp.addAttributes(src.fields())
         mem.updateFields()
@@ -228,7 +230,8 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
         centroid_override = self.parameterAsVectorLayer(parameters, self.PARAM_CENTROID_OVERRIDE, context)
         raster = self.parameterAsRasterLayer(parameters, self.PARAM_RASTER, context)
         if catchment is None or raster is None:
-            raise QgsProcessingException("Missing input layer(s).")
+            msg = "Missing input layer(s)."
+            raise QgsProcessingException(msg)
 
         target_crs = catchment.crs()  # final/output CRS (projected; metres)
         raster_crs = raster.crs()  # working CRS
@@ -393,7 +396,8 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
         grid_layer = context.getMapLayer(grid_with_dn)
         dn_field = next((f.name() for f in grid_layer.fields() if f.name().lower().startswith("dn_")), None)
         if not dn_field:
-            raise QgsProcessingException("Raster sampling failed: DN_* field not found.")
+            msg = "Raster sampling failed: DN_* field not found."
+            raise QgsProcessingException(msg)
 
         expr = f'"{dn_field}" IS NOT NULL'
         if no_data_vals:
@@ -438,7 +442,8 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
             sum_area += a
             sum_area_dn += a * dn
         if sum_area == 0.0:
-            raise QgsProcessingException("Total area is zero after clipping.")
+            msg = "Total area is zero after clipping."
+            raise QgsProcessingException(msg)
         avg_rainfall = sum_area_dn / sum_area
         fb.setCurrentStep(13)
 
@@ -448,7 +453,8 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
             (f.name() for f in centroid_layer.fields() if f.name().lower().startswith("dn_")), None
         )
         if not centroid_dn_field:
-            raise QgsProcessingException("Centroid raster sampling failed: DN_* field not found.")
+            msg = "Centroid raster sampling failed: DN_* field not found."
+            raise QgsProcessingException(msg)
         centroid_dn_val = None
         for f in centroid_layer.getFeatures():
             centroid_dn_val = self._safe_float(f[centroid_dn_field])
@@ -654,7 +660,7 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
             "native:buffer",
             {
                 "INPUT": cleaned_id,
-                "DISTANCE": self.FINAL_BUFFER_M,  # −0.5 m
+                "DISTANCE": self.FINAL_BUFFER_M,  # -0.5 m
                 "SEGMENTS": 1,
                 "END_CAP_STYLE": 0,
                 "JOIN_STYLE": 1,  # miter (square)
@@ -730,7 +736,8 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
         layer_to_write_id = post_kept
         post_layer = context.getMapLayer(post_kept)
         if post_layer is None:
-            raise QgsProcessingException("Final layer not found in context.")
+            msg = "Final layer not found in context."
+            raise QgsProcessingException(msg)
         if post_layer.crs() != target_crs:
             layer_to_write_id = processing.run(
                 "native:reprojectlayer",
@@ -750,7 +757,8 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
             parameters, self.PARAM_OUT, context, post_layer.fields(), post_layer.wkbType(), target_crs
         )
         if sink is None:
-            raise QgsProcessingException("Failed to create final output sink.")
+            msg = "Failed to create final output sink."
+            raise QgsProcessingException(msg)
         for f in post_layer.getFeatures():
             sink.addFeature(f, QgsFeatureSink.FastInsert)
 

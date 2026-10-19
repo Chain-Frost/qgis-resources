@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from pathlib import Path
 import re
 import shutil
+from pathlib import Path
 
 from qgis.core import (
     QgsLayerDefinition,
@@ -10,7 +10,6 @@ from qgis.core import (
     QgsProject,
     QgsProviderRegistry,
 )
-
 
 # -----------------------------
 # USER SETTINGS
@@ -146,7 +145,17 @@ def classify_layer_source(layer: QgsMapLayer) -> tuple[str, Path | None]:
     uri = layer.source() or ""
 
     # Memory / virtual / obvious non-file cases
-    if provider in {"memory", "virtual", "wms", "arcgismapserver", "arcgisfeatureserver", "vectortile", "postgres", "mssql", "oracle"}:
+    if provider in {
+        "memory",
+        "virtual",
+        "wms",
+        "arcgismapserver",
+        "arcgisfeatureserver",
+        "vectortile",
+        "postgres",
+        "mssql",
+        "oracle",
+    }:
         return "remote", None
 
     parts = QgsProviderRegistry.instance().decodeUri(provider, uri) or {}
@@ -181,7 +190,8 @@ def main() -> None:
     themes = project.mapThemeCollection()
 
     if THEME_NAME not in themes.mapThemes():
-        raise ValueError(f"Theme not found: {THEME_NAME}. Available: {themes.mapThemes()}")
+        msg = f"Theme not found: {THEME_NAME}. Available: {themes.mapThemes()}"
+        raise ValueError(msg)
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
 

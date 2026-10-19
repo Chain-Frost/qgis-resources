@@ -11,7 +11,8 @@ src_fields = {f.name() for f in src.fields()}
 dst_fields = {f.name() for f in dst.fields()}
 
 if KEY_FIELD not in src_fields or KEY_FIELD not in dst_fields:
-    raise RuntimeError("ID must exist in both layers.")
+    msg = "ID must exist in both layers."
+    raise RuntimeError(msg)
 
 # Copy only fields that exist in both layers, excluding fid/FID and ID
 common_fields = sorted((src_fields & dst_fields) - {"fid", "FID", KEY_FIELD})
@@ -46,7 +47,8 @@ for f in dst.getFeatures():
     updated += 1
 
 if not dst.commitChanges():
-    raise RuntimeError("Commit failed (layer may be read-only, locked, or has constraints).")
+    msg = "Commit failed (layer may be read-only, locked, or has constraints)."
+    raise RuntimeError(msg)
 
 print(f"Updated features: {updated}")
 print(f"Unmatched IDs:    {missing}")

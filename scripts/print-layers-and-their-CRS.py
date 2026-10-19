@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+
 from qgis.core import QgsProject, QgsProviderRegistry
 
 # EPSG codes to hide
@@ -26,7 +27,7 @@ def _crs_label(layer) -> str:
     if auth:
         return auth
     desc = (crs.description() or "").strip()
-    return desc if desc else "<unknown>"
+    return desc or "<unknown>"
 
 
 def _source_filename(layer) -> str:
@@ -43,7 +44,7 @@ def _source_filename(layer) -> str:
         try:
             parts = md.decodeUri(uri)
             for key in ("path", "url", "file"):
-                if key in parts and parts[key]:
+                if parts.get(key):
                     return Path(parts[key]).name
         except Exception:
             pass
@@ -51,7 +52,7 @@ def _source_filename(layer) -> str:
     # Fallback: strip QGIS options from URI and take last path component
     base = uri.split("|", 1)[0].split("?", 1)[0]
     name = Path(base).name
-    return name if name else layer.name()
+    return name or layer.name()
 
 
 def list_current_layers_crs(

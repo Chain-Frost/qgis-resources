@@ -1,5 +1,5 @@
-from collections import defaultdict
 import os
+from collections import defaultdict
 from pathlib import Path
 
 import processing
@@ -11,7 +11,6 @@ from qgis.core import (
     QgsVectorFileWriter,
     QgsVectorLayer,
 )
-
 
 project = QgsProject.instance()
 transform_context = project.transformContext()
@@ -71,9 +70,8 @@ for layer in project.mapLayers().values():
 
 
 if not dxf_layers:
-    raise RuntimeError(
-        "No loaded DXF layers with line geometry were found."
-    )
+    msg = "No loaded DXF layers with line geometry were found."
+    raise RuntimeError(msg)
 
 
 successful: list[Path] = []
@@ -109,9 +107,7 @@ for path_key, line_layers in dxf_layers.items():
         options.driverName = "GPKG"
         options.layerName = output_layer_name
         options.fileEncoding = "UTF-8"
-        options.actionOnExistingFile = (
-            QgsVectorFileWriter.CreateOrOverwriteFile
-        )
+        options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteFile
 
         result = QgsVectorFileWriter.writeAsVectorFormatV3(
             export_layer,

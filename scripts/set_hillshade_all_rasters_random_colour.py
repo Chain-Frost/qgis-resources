@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import random
 
-from qgis.core import QgsProject, QgsRasterLayer, QgsHillshadeRenderer
+from qgis.core import QgsHillshadeRenderer, QgsProject, QgsRasterLayer
 from qgis.PyQt.QtGui import QColor
 
 
@@ -32,7 +32,8 @@ def _make_hillshade_renderer(layer: QgsRasterLayer, band: int, z_factor: float, 
         r = QgsHillshadeRenderer(provider, band, z_factor, azimuth, altitude)
         return r
     except TypeError as e:
-        raise TypeError(f"Cannot construct QgsHillshadeRenderer on this QGIS build: {e}") from e
+        msg = f"Cannot construct QgsHillshadeRenderer on this QGIS build: {e}"
+        raise TypeError(msg) from e
 
 
 def set_all_rasters_to_hillshade_and_random_color(

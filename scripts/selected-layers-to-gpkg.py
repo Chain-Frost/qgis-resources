@@ -1,5 +1,5 @@
-from pathlib import Path
 import re
+from pathlib import Path
 
 from qgis.core import (
     QgsMapLayerStyle,
@@ -7,6 +7,7 @@ from qgis.core import (
     QgsVectorFileWriter,
     QgsVectorLayer,
 )
+from qgis.utils import iface
 
 OUTPUT_DIR = Path(r"E:\path\data")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -82,6 +83,6 @@ for source_layer in layers:
     source_index = parent_group.children().index(source_node)
     parent_group.insertLayer(source_index + 1, new_layer)
 
-    print(f"EXPORTED: {source_layer.name()}\n" f"  -> {output_path}\n" f"  -> Added to same group with source style")
+    print(f"EXPORTED: {source_layer.name()}\n  -> {output_path}\n  -> Added to same group with source style")
 
 print("Finished.")

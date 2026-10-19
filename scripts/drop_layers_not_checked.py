@@ -1,3 +1,5 @@
+from qgis.core import QgsLayerTreeGroup, QgsLayerTreeLayer, QgsLayerTreeNode, QgsProject
+
 root = QgsProject.instance().layerTreeRoot()
 project = QgsProject.instance()
 
