@@ -48,17 +48,10 @@ jobs:
         run: python -m pyright -p pyrightconfig.json
       - name: Test pure Python logic (QGIS mocked)
         run: python -m pytest scripts/LotsOfThemes/tests scripts/tests -q
-      - name: Preview Ruff safe auto-fixes (informational)
-        shell: pwsh
-        run: |
-          Write-Host "BEGIN_RUFF_SAFE_DIFF"
-          python -m ruff check scripts raster-crs --fix --diff
-          Write-Host "END_RUFF_SAFE_DIFF"
-          exit 0
       - name: Report legacy Ruff baseline (informational)
         shell: pwsh
         run: |
-          python -m ruff check scripts raster-crs --statistics
+          python -m ruff check scripts raster-crs --output-format concise
           if ($LASTEXITCODE -ne 0) {
             Write-Host "Legacy scripts have lint debt; new and maintained scripts are gated above."
             exit 0
