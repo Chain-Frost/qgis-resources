@@ -7,10 +7,11 @@ backward compatibility is not a goal.
 
 - Ruff 0.16.6: configured in root ruff.toml, aligned with ryan-tools rules
   where appropriate, with a Python 3.12 target.
-- Pyright 1.1.414: configured in pyrightconfig.json for Python 3.12 on
-  Windows. Headless CI excludes missing native PyQGIS bindings; run
-  Pyright locally against the installed QGIS 4 Python environment for API
-  accuracy. The initial tracked-code type-checking policy is basic.
+- Pyright 1.1.414: CI enforces **strict** checking of QGIS-independent
+  code through `pyright-ci.json`, and retains the existing **basic**
+  QGIS-dependent headless baseline via `pyright-headless.json`.
+  The default `pyrightconfig.json` enables **strict local QGIS 4** type
+  checking. Strict PyQGIS validation is not yet a CI gate.
 - Pytest: all tests live under the top-level `tests/` directory; pure logic is tested with minimal QGIS mocks in Windows CI.
   These tests do **not** verify native processing, GeoPackage writes, QGIS
   editing-provider behaviour, or real map themes. Manual QGIS 4 validation
@@ -27,9 +28,41 @@ Locally, from a QGIS-enabled shell (or another Python 3.12 environment):
 python -m pip install ruff==0.16.6 pyright==1.1.414 pytest==9.1.1
 python -m ruff check scripts raster-crs tests
 python -m ruff format --check scripts raster-crs tests
-python -m pyright -p pyrightconfig.json
+python -m pyright -p pyright-ci.json
+python -m pyright -p pyright-headless.json
 python -m pytest tests -q
 ```
+
+## Strict PyQGIS typing on Windows
+
+The default `pyrightconfig.json` checks maintained GeoPackage, spatial-index,
+map-theme and project-parser code in **strict** mode. Its `extraPaths`
+list includes example OSGeo4W locations
+(`C:/OSGeo4W/apps/qgis/python` and `.../plugins`); adapt them to your
+actual install. QGIS 4 uses Python 3.12 and Qt 6, independently of the
+`ryan-tools` package's Python support.
+
+In an OSGeo4W shell configured for your installed QGIS 4:
+
+```powershell
+python scripts/qgis_typing_environment.py
+python -m pyright -p pyrightconfig.json
+```
+
+The environment helper reports actual QGIS/Qt/Python versions and binding
+locations, failing for incompatible Python, QGIS or Qt versions. PyQGIS
+wraps native C++ classes via SIP; Pyright needs matching QGIS and PyQt6
+type definitions for complete checking. Optional local stubs can be
+placed in `.vscode/qgis-type-stubs`. Generated third-party stubs should
+not be committed. Validate published `qgis-stubs` releases against
+QGIS 4 before trusting their type declarations; QGIS 3/Qt5 stubs do not
+establish QGIS 4 API compatibility.
+
+Hosted CI intentionally has no native QGIS bindings: the headless basic
+gate disables missing-import reports but cannot validate their APIs.
+The separate strict CI gate covers the pure-Python project parser.
+Expanding strict type checking to the real QGIS API requires tested
+type definitions and native QGIS 4 validation, not broader suppressions.
 
 ## Migrated operations
 
