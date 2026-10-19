@@ -251,7 +251,11 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
                 feedback.setProgress(int(100 * (i + 1) / total))
         if batch:
             dp.addFeatures(batch)
-        context.temporaryLayerStore().addMapLayer(mem)
+        layer_store = context.temporaryLayerStore()
+        if layer_store is None:
+            msg = "Transform: processing temporary-layer store is unavailable."
+            raise QgsProcessingException(msg)
+        layer_store.addMapLayer(mem)
         return mem.id()
 
     # ---------- main ----------
