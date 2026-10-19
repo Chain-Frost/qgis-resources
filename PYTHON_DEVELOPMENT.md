@@ -54,9 +54,11 @@ locations, failing for incompatible Python, QGIS or Qt versions. PyQGIS
 wraps native C++ classes via SIP; Pyright needs matching QGIS and PyQt6
 type definitions for complete checking. Optional local stubs can be
 placed in `.vscode/qgis-type-stubs`. Generated third-party stubs should
-not be committed. Validate published `qgis-stubs` releases against
-QGIS 4 before trusting their type declarations; QGIS 3/Qt5 stubs do not
-establish QGIS 4 API compatibility.
+not be committed. **Do not install the currently published `qgis-stubs` 0.4.0 for QGIS 4:**
+that version targets QGIS 3/Qt5. Upstream identifies `qgis-stubs>=1.0`
+as the QGIS 4/Qt6 generation. Only use a released QGIS 4 version after
+checking it matches your installed QGIS API, or use locally generated
+matching definitions. QGIS 3/Qt5 stubs do not prove QGIS 4 compatibility.
 
 Hosted CI intentionally has no native QGIS bindings: the headless basic
 gate disables missing-import reports but cannot validate their APIs.

@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 from urllib.parse import ParseResult, unquote, urlparse
-# url2pathname is supported by the QGIS 4 Python 3.12 runtime; typeshed flags a Python 3.14 deprecation.
 from urllib.request import url2pathname  # pyright: ignore[reportDeprecated]
 from xml.etree import ElementTree
 from zipfile import BadZipFile, ZipFile
