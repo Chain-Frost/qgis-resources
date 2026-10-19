@@ -82,6 +82,38 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
         )
 
     # ---------- helpers ----------
+    # These guards only reject missing/invalid processing objects. They must not
+    # modify the polygon, snapping, topology or rainfall algorithm used by TUFLOW.
+    @staticmethod
+    def _output(result: dict[str, Any] | None) -> Any:
+        """Require an OUTPUT without coercing the QGIS-provided object or path.
+
+        Processing providers may return a layer ID, path or layer object; the
+        original output type is deliberately preserved.
+        """
+        if result is None or result.get("OUTPUT") is None:
+            msg = "QGIS processing step did not return an OUTPUT"
+            raise QgsProcessingException(msg)
+        return result["OUTPUT"]
+
+    @staticmethod
+    def _vector_layer(context: QgsProcessingContext, layer_id: Any) -> QgsVectorLayer:
+        """Require a vector layer returned by the processing context."""
+        layer = context.getMapLayer(layer_id)
+        if not isinstance(layer, QgsVectorLayer):
+            msg = "QGIS processing output does not resolve to a vector layer"
+            raise QgsProcessingException(msg)
+        return layer
+
+    @staticmethod
+    def _project() -> QgsProject:
+        """Require the active QGIS project when project settings are needed."""
+        project = QgsProject.instance()
+        if project is None:
+            msg = "No active QGIS project is available"
+            raise QgsProcessingException(msg)
+        return project
+
     @staticmethod
     def _round_to_grid(v: float, g: float) -> float:
         """Snap a numeric value to the nearest multiple of the grid size."""
@@ -111,17 +143,17 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
     ) -> str:
         """Attempt geometry repair without make_valid; fall back to zero buffer."""
         try:
-            return processing.run(
+            return self._output(processing.run(
                 "native:fixgeometries",
                 {"INPUT": input_id, "OUTPUT": QgsProcessing.TEMPORARY_OUTPUT},
                 context=context,
                 feedback=feedback,
                 is_child_algorithm=True,
-            )["OUTPUT"]
+            ))
         except Exception:
             pass
         try:
-            return processing.run(
+            return self._output(processing.run(
                 "native:buffer",
                 {
                     "INPUT": input_id,
@@ -136,7 +168,7 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
                 context=context,
                 feedback=feedback,
                 is_child_algorithm=True,
-            )["OUTPUT"]
+            ))
         except Exception as e:
             msg = f"Geometry repair failed (fixgeometries/buffer 0). Error: {e}"
             raise QgsProcessingException(msg) from e
@@ -237,13 +269,13 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
         raster_crs = raster.crs()  # working CRS
 
         # A) Catchment → raster CRS; repair; index
-        cat_r_id = processing.run(
+        cat_r_id = self._output(processing.run(
             "native:reprojectlayer",
             {"INPUT": catchment, "TARGET_CRS": raster_crs, "OPERATION": "", "OUTPUT": QgsProcessing.TEMPORARY_OUTPUT},
             context=context,
             feedback=fb,
             is_child_algorithm=True,
-        )["OUTPUT"]
+        ))
         fb.setCurrentStep(1)
 
         cat_r_id: str = self._repair_geoms_no_makevalid(cat_r_id, context, fb)
@@ -255,27 +287,27 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
         # A2) Centroid PoS of dissolved catchment (for DN at centroid)
         if centroid_override is None:
             centroid_source = "catchment point-on-surface"
-            cat_diss_id = processing.run(
+            cat_diss_id = self._output(processing.run(
                 "native:dissolve",
                 {"INPUT": cat_r_id, "FIELD": [], "SEPARATE_DISJOINT": False, "OUTPUT": QgsProcessing.TEMPORARY_OUTPUT},
                 context=context,
                 feedback=fb,
                 is_child_algorithm=True,
-            )["OUTPUT"]
+            ))
             fb.setCurrentStep(3)
 
-            centroid_input_id = processing.run(
+            centroid_input_id = self._output(processing.run(
                 "native:pointonsurface",
                 {"INPUT": cat_diss_id, "ALL_PARTS": False, "OUTPUT": QgsProcessing.TEMPORARY_OUTPUT},
                 context=context,
                 feedback=fb,
                 is_child_algorithm=True,
-            )["OUTPUT"]
+            ))
             fb.setCurrentStep(4)
         else:
             centroid_source = "user control point"
             if centroid_override.crs() != raster_crs:
-                centroid_input_id = processing.run(
+                centroid_input_id = self._output(processing.run(
                     "native:reprojectlayer",
                     {
                         "INPUT": centroid_override,
@@ -286,7 +318,7 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
                     context=context,
                     feedback=fb,
                     is_child_algorithm=True,
-                )["OUTPUT"]
+                ))
             else:
                 centroid_input_id = centroid_override.id()
             fb.setCurrentStep(3)
@@ -299,7 +331,7 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
         px = abs(raster.rasterUnitsPerPixelX())
         py = abs(raster.rasterUnitsPerPixelY())
 
-        grid_id = processing.run(
+        grid_id = self._output(processing.run(
             "native:creategrid",
             {
                 "TYPE": 2,
@@ -314,10 +346,10 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
             context=context,
             feedback=fb,
             is_child_algorithm=True,
-        )["OUTPUT"]
+        ))
         fb.setCurrentStep(5)
 
-        grid_uid = processing.run(
+        grid_uid = self._output(processing.run(
             "native:addautoincrementalfield",
             {
                 "INPUT": grid_id,
@@ -330,36 +362,36 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
             context=context,
             feedback=fb,
             is_child_algorithm=True,
-        )["OUTPUT"]
+        ))
         fb.setCurrentStep(6)
 
         processing.run(
             "native:createspatialindex", {"INPUT": grid_uid}, context=context, feedback=fb, is_child_algorithm=True
         )
 
-        pts_id = processing.run(
+        pts_id = self._output(processing.run(
             "native:pointonsurface",
             {"INPUT": grid_uid, "ALL_PARTS": False, "OUTPUT": QgsProcessing.TEMPORARY_OUTPUT},
             context=context,
             feedback=fb,
             is_child_algorithm=True,
-        )["OUTPUT"]
+        ))
         fb.setCurrentStep(7)
 
         # DN sampling (and NoData detection)
         rp = raster.dataProvider()
         no_data_vals = rp.srcNoDataValueList(1) if hasattr(rp, "srcNoDataValueList") else []
 
-        sampled_pts = processing.run(
+        sampled_pts = self._output(processing.run(
             "native:rastersampling",
             {"INPUT": pts_id, "RASTERCOPY": raster, "COLUMN_PREFIX": "DN_", "OUTPUT": QgsProcessing.TEMPORARY_OUTPUT},
             context=context,
             feedback=fb,
             is_child_algorithm=True,
-        )["OUTPUT"]
+        ))
         fb.setCurrentStep(8)
 
-        centroid_sample = processing.run(
+        centroid_sample = self._output(processing.run(
             "native:rastersampling",
             {
                 "INPUT": centroid_input_id,
@@ -370,10 +402,10 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
             context=context,
             feedback=fb,
             is_child_algorithm=True,
-        )["OUTPUT"]
+        ))
         fb.setCurrentStep(9)
 
-        grid_with_dn = processing.run(
+        grid_with_dn = self._output(processing.run(
             "native:joinattributestable",
             {
                 "INPUT": grid_uid,
@@ -390,7 +422,7 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
             context=context,
             feedback=fb,
             is_child_algorithm=True,
-        )["OUTPUT"]
+        ))
         fb.setCurrentStep(10)
 
         grid_layer = context.getMapLayer(grid_with_dn)
@@ -403,13 +435,13 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
         if no_data_vals:
             expr += " AND " + " AND ".join([f'"{dn_field}" <> {v}' for v in no_data_vals])
 
-        valid_cells = processing.run(
+        valid_cells = self._output(processing.run(
             "native:extractbyexpression",
             {"INPUT": grid_with_dn, "EXPRESSION": expr, "OUTPUT": QgsProcessing.TEMPORARY_OUTPUT},
             context=context,
             feedback=fb,
             is_child_algorithm=True,
-        )["OUTPUT"]
+        ))
         fb.setCurrentStep(11)
 
         processing.run(
@@ -417,13 +449,13 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
         )
 
         # Clip per-cell polygons to catchment (raster CRS)
-        clipped_id = processing.run(
+        clipped_id = self._output(processing.run(
             "native:clip",
             {"INPUT": valid_cells, "OVERLAY": cat_r_id, "OUTPUT": QgsProcessing.TEMPORARY_OUTPUT},
             context=context,
             feedback=fb,
             is_child_algorithm=True,
-        )["OUTPUT"]
+        ))
         fb.setCurrentStep(12)
 
         # Area-weighted average DN (raster CRS)
@@ -463,7 +495,7 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
             centroid_dn_val = float("nan")
 
         # --- Add f1 and f2 on the clipped polygons (raster CRS) so attributes carry forward
-        clipped_with_f1 = processing.run(
+        clipped_with_f1 = self._output(processing.run(
             "native:fieldcalculator",
             {
                 "INPUT": clipped_id,
@@ -478,9 +510,9 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
             context=context,
             feedback=fb,
             is_child_algorithm=True,
-        )["OUTPUT"]
+        ))
 
-        clipped_with_f1_f2 = processing.run(
+        clipped_with_f1_f2 = self._output(processing.run(
             "native:fieldcalculator",
             {
                 "INPUT": clipped_with_f1,
@@ -495,19 +527,19 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
             context=context,
             feedback=fb,
             is_child_algorithm=True,
-        )["OUTPUT"]
+        ))
 
         # Continue from this layer
         clipped_id = clipped_with_f1_f2
 
         # Enforce singleparts before transform
-        single_work = processing.run(
+        single_work = self._output(processing.run(
             "native:multiparttosingleparts",
             {"INPUT": clipped_id, "OUTPUT": QgsProcessing.TEMPORARY_OUTPUT},
             context=context,
             feedback=fb,
             is_child_algorithm=True,
-        )["OUTPUT"]
+        ))
         fb.setCurrentStep(14)
 
         # Per-vertex reprojection + snap (raster CRS → target CRS)
@@ -526,31 +558,31 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
         fb.setCurrentStep(15)
 
         # Rebuild topology (polygons→lines→dissolve→polygonize)
-        lines_id = processing.run(
+        lines_id = self._output(processing.run(
             "native:polygonstolines",
             {"INPUT": rebuilt_id, "OUTPUT": QgsProcessing.TEMPORARY_OUTPUT},
             context=context,
             feedback=fb,
             is_child_algorithm=True,
-        )["OUTPUT"]
-        dissolved_edges = processing.run(
+        ))
+        dissolved_edges = self._output(processing.run(
             "native:dissolve",
             {"INPUT": lines_id, "FIELD": [], "SEPARATE_DISJOINT": False, "OUTPUT": QgsProcessing.TEMPORARY_OUTPUT},
             context=context,
             feedback=fb,
             is_child_algorithm=True,
-        )["OUTPUT"]
-        final_tiles = processing.run(
+        ))
+        final_tiles = self._output(processing.run(
             "native:polygonize",
             {"INPUT": dissolved_edges, "KEEP_FIELDS": False, "OUTPUT": QgsProcessing.TEMPORARY_OUTPUT},
             context=context,
             feedback=fb,
             is_child_algorithm=True,
-        )["OUTPUT"]
+        ))
         fb.setCurrentStep(16)
 
         # Attribute restore via PoS (avoids 0-distance tie issues)
-        final_uid = processing.run(
+        final_uid = self._output(processing.run(
             "native:addautoincrementalfield",
             {
                 "INPUT": final_tiles,
@@ -563,14 +595,14 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
             context=context,
             feedback=fb,
             is_child_algorithm=True,
-        )["OUTPUT"]
-        pts_final = processing.run(
+        ))
+        pts_final = self._output(processing.run(
             "native:pointonsurface",
             {"INPUT": final_uid, "ALL_PARTS": False, "OUTPUT": QgsProcessing.TEMPORARY_OUTPUT},
             context=context,
             feedback=fb,
             is_child_algorithm=True,
-        )["OUTPUT"]
+        ))
 
         processing.run(
             "native:createspatialindex", {"INPUT": pts_final}, context=context, feedback=fb, is_child_algorithm=True
@@ -609,7 +641,7 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
             if un2 > 0:
                 fb.pushInfo(f"Warning: {un2} point(s) could not be matched after tolerance increase.")
 
-        polys_joined = processing.run(
+        polys_joined = self._output(processing.run(
             "native:joinattributestable",
             {
                 "INPUT": final_uid,
@@ -626,37 +658,37 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
             context=context,
             feedback=fb,
             is_child_algorithm=True,
-        )["OUTPUT"]
+        ))
         fb.setCurrentStep(17)
 
         # Clean: dedupe → singleparts → fix
-        unique_id = processing.run(
+        unique_id = self._output(processing.run(
             "native:deleteduplicategeometries",
             {"INPUT": polys_joined, "OUTPUT": QgsProcessing.TEMPORARY_OUTPUT},
             context=context,
             feedback=fb,
             is_child_algorithm=True,
-        )["OUTPUT"]
-        single_id = processing.run(
+        ))
+        single_id = self._output(processing.run(
             "native:multiparttosingleparts",
             {"INPUT": unique_id, "OUTPUT": QgsProcessing.TEMPORARY_OUTPUT},
             context=context,
             feedback=fb,
             is_child_algorithm=True,
-        )["OUTPUT"]
-        cleaned_id = processing.run(
+        ))
+        cleaned_id = self._output(processing.run(
             "native:fixgeometries",
             {"INPUT": single_id, "OUTPUT": QgsProcessing.TEMPORARY_OUTPUT},
             context=context,
             feedback=fb,
             is_child_algorithm=True,
-        )["OUTPUT"]
+        ))
         processing.run(
             "native:createspatialindex", {"INPUT": cleaned_id}, context=context, feedback=fb, is_child_algorithm=True
         )
 
         # FINAL: inward buffer (miter/square corners) to create separation
-        buffered_id = processing.run(
+        buffered_id = self._output(processing.run(
             "native:buffer",
             {
                 "INPUT": cleaned_id,
@@ -671,32 +703,32 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
             context=context,
             feedback=fb,
             is_child_algorithm=True,
-        )["OUTPUT"]
+        ))
 
         # Post-buffer: singleparts → fix → drop <1 m² → index
-        post_single = processing.run(
+        post_single = self._output(processing.run(
             "native:multiparttosingleparts",
             {"INPUT": buffered_id, "OUTPUT": QgsProcessing.TEMPORARY_OUTPUT},
             context=context,
             feedback=fb,
             is_child_algorithm=True,
-        )["OUTPUT"]
+        ))
 
-        post_fixed = processing.run(
+        post_fixed = self._output(processing.run(
             "native:fixgeometries",
             {"INPUT": post_single, "OUTPUT": QgsProcessing.TEMPORARY_OUTPUT},
             context=context,
             feedback=fb,
             is_child_algorithm=True,
-        )["OUTPUT"]
+        ))
 
-        post_kept = processing.run(
+        post_kept = self._output(processing.run(
             "native:extractbyexpression",
             {"INPUT": post_fixed, "EXPRESSION": "$area >= 1.0", "OUTPUT": QgsProcessing.TEMPORARY_OUTPUT},
             context=context,
             feedback=fb,
             is_child_algorithm=True,
-        )["OUTPUT"]
+        ))
 
         before_cnt = context.getMapLayer(post_fixed).featureCount()
         after_cnt = context.getMapLayer(post_kept).featureCount()
@@ -707,13 +739,13 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
         )
 
         # QA (planar area parity) after buffer — non-zero due to shrink
-        qa_diss = processing.run(
+        qa_diss = self._output(processing.run(
             "native:dissolve",
             {"INPUT": post_kept, "FIELD": [], "SEPARATE_DISJOINT": False, "OUTPUT": QgsProcessing.TEMPORARY_OUTPUT},
             context=context,
             feedback=fb,
             is_child_algorithm=True,
-        )["OUTPUT"]
+        ))
 
         dqa = QgsDistanceArea()
         dqa.setEllipsoid("")
@@ -739,7 +771,7 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
             msg = "Final layer not found in context."
             raise QgsProcessingException(msg)
         if post_layer.crs() != target_crs:
-            layer_to_write_id = processing.run(
+            layer_to_write_id = self._output(processing.run(
                 "native:reprojectlayer",
                 {
                     "INPUT": post_kept,
@@ -750,7 +782,7 @@ class Spatial_rainfall_pattern(QgsProcessingAlgorithm):
                 context=context,
                 feedback=fb,
                 is_child_algorithm=True,
-            )["OUTPUT"]
+            ))
             post_layer = context.getMapLayer(layer_to_write_id)
 
         sink, sink_id = self.parameterAsSink(
