@@ -33,9 +33,11 @@ def create_sample(prj_path: PathInput, output_dir: Path = DEFAULT_OUTPUT_DIR) ->
     """Create a one-pixel GeoTIFF containing the CRS from ``prj_path``."""
     source_path = Path(prj_path)
     if source_path.suffix.casefold() != ".prj":
-        raise ValueError(f"Expected a .prj file: {source_path}")
+        msg = f"Expected a .prj file: {source_path}"
+        raise ValueError(msg)
     if not source_path.is_file():
-        raise FileNotFoundError(f"PRJ file does not exist: {source_path}")
+        msg = f"PRJ file does not exist: {source_path}"
+        raise FileNotFoundError(msg)
 
     crs = CRS.from_wkt(source_path.read_text(encoding="utf-8-sig"))
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -71,7 +73,8 @@ def create_samples(
     """Create sample rasters for either one PRJ path or an iterable of paths."""
     paths: list[Path] = _normalise_paths(prj_paths=prj_paths)
     if not paths:
-        raise ValueError("At least one PRJ path is required")
+        msg = "At least one PRJ path is required"
+        raise ValueError(msg)
     return [create_sample(prj_path=path, output_dir=output_dir) for path in paths]
 
 

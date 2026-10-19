@@ -70,8 +70,9 @@ for layer in project.mapLayers().values():
 
 
 if not dxf_layers:
+    msg = "No loaded DXF layers with line geometry were found."
     raise RuntimeError(
-        "No loaded DXF layers with line geometry were found."
+        msg
     )
 
 

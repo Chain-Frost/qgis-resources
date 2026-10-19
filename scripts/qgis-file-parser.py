@@ -134,14 +134,16 @@ def parse_args() -> argparse.Namespace:
 def prompt_for_project_file() -> Path:
     raw_path = input("QGIS project file (.qgs or .qgz): ").strip().strip('"')
     if not raw_path:
-        raise SystemExit("No project file supplied.")
+        msg = "No project file supplied."
+        raise SystemExit(msg)
     return Path(raw_path)
 
 
 def inspect_qgis_project(*, project_file: Path) -> QgisProjectReport:
     project_file = project_file.expanduser()
     if not project_file.exists():
-        raise FileNotFoundError(f"QGIS project does not exist: {project_file}")
+        msg = f"QGIS project does not exist: {project_file}"
+        raise FileNotFoundError(msg)
 
     root: ElementTree.Element = ElementTree.fromstring(read_project_xml(project_file=project_file))
     project_home: Path = get_project_home(project_file=project_file, root=root)
@@ -172,17 +174,20 @@ def read_project_xml(*, project_file: Path) -> bytes:
     if suffix == ".qgs":
         return project_file.read_bytes()
     if suffix != ".qgz":
-        raise ValueError(f"Expected a .qgs or .qgz file: {project_file}")
+        msg = f"Expected a .qgs or .qgz file: {project_file}"
+        raise ValueError(msg)
 
     try:
         with ZipFile(project_file) as archive:
             qgs_names: list[str] = [name for name in archive.namelist() if name.lower().endswith(".qgs")]
             if not qgs_names:
-                raise ValueError(f"No .qgs project XML found inside: {project_file}")
+                msg = f"No .qgs project XML found inside: {project_file}"
+                raise ValueError(msg)
             with archive.open(qgs_names[0]) as qgs_file:
                 return qgs_file.read()
     except BadZipFile as exc:
-        raise ValueError(f"QGZ file is not a readable zip archive: {project_file}") from exc
+        msg = f"QGZ file is not a readable zip archive: {project_file}"
+        raise ValueError(msg) from exc
 
 
 def get_project_home(*, project_file: Path, root: ElementTree.Element) -> Path:

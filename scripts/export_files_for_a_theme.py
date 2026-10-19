@@ -180,7 +180,8 @@ def main() -> None:
     themes = project.mapThemeCollection()
 
     if THEME_NAME not in themes.mapThemes():
-        raise ValueError(f"Theme not found: {THEME_NAME}. Available: {themes.mapThemes()}")
+        msg = f"Theme not found: {THEME_NAME}. Available: {themes.mapThemes()}"
+        raise ValueError(msg)
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
 

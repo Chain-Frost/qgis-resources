@@ -103,7 +103,8 @@ def main() -> None:
     target_crs = QgsCoordinateReferenceSystem(TARGET_EPSG)
 
     if not target_crs.isValid():
-        raise ValueError(f"Invalid target CRS: {TARGET_EPSG}")
+        msg = f"Invalid target CRS: {TARGET_EPSG}"
+        raise ValueError(msg)
 
     exported = 0
     skipped = 0

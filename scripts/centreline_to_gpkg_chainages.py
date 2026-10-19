@@ -57,14 +57,17 @@ def resolve_input_files(
         paths = [Path(path) for path in inputs]
 
     if not paths:
-        raise ValueError("No input DXF files were provided.")
+        msg = "No input DXF files were provided."
+        raise ValueError(msg)
 
     for path in paths:
         if path.suffix.casefold() != ".dxf":
-            raise ValueError(f"Input is not a DXF file: {path}")
+            msg = f"Input is not a DXF file: {path}"
+            raise ValueError(msg)
 
         if not path.is_file():
-            raise FileNotFoundError(f"DXF file does not exist: {path}")
+            msg = f"DXF file does not exist: {path}"
+            raise FileNotFoundError(msg)
 
     return paths
 
@@ -104,9 +107,12 @@ def delete_existing_file(file_path: Path) -> None:
     try:
         file_path.unlink()
     except PermissionError as error:
-        raise PermissionError(
+        msg = (
             f"Cannot replace {file_path}. It may be open in QGIS or "
             "another application."
+        )
+        raise PermissionError(
+            msg
         ) from error
 
 
@@ -166,8 +172,9 @@ def load_dxf_line_layer(dxf_path: Path) -> QgsVectorLayer:
     assigned_crs = QgsCoordinateReferenceSystem(SOURCE_CRS)
 
     if not assigned_crs.isValid():
+        msg = f"Configured source CRS is invalid: {SOURCE_CRS}"
         raise RuntimeError(
-            f"Configured source CRS is invalid: {SOURCE_CRS}"
+            msg
         )
 
     errors: list[str] = []
@@ -240,15 +247,17 @@ def extract_longest_line(
             longest_length = length
 
     if longest_feature is None:
+        msg = f"No valid line features were found in {source_name}."
         raise RuntimeError(
-            f"No valid line features were found in {source_name}."
+            msg
         )
 
     crs = source_layer.crs()
 
     if not crs.isValid():
+        msg = f"The source layer for {source_name} has no valid CRS."
         raise RuntimeError(
-            f"The source layer for {source_name} has no valid CRS."
+            msg
         )
 
     geometry_name = QgsWkbTypes.displayString(
@@ -262,9 +271,12 @@ def extract_longest_line(
     )
 
     if not memory_layer.isValid():
-        raise RuntimeError(
+        msg = (
             f"Could not create a temporary longest-line layer for "
             f"{source_name}."
+        )
+        raise RuntimeError(
+            msg
         )
 
     provider = memory_layer.dataProvider()
@@ -278,9 +290,12 @@ def extract_longest_line(
     added, _ = provider.addFeatures([output_feature])
 
     if not added:
-        raise RuntimeError(
+        msg = (
             f"Could not copy the longest line from {source_name} into "
             "the temporary layer."
+        )
+        raise RuntimeError(
+            msg
         )
 
     memory_layer.updateExtents()
@@ -344,9 +359,12 @@ def process_dxf(
     )
 
     if not output_gpkg.is_file():
-        raise RuntimeError(
+        msg = (
             f"Processing completed but the GeoPackage was not created: "
             f"{output_gpkg}"
+        )
+        raise RuntimeError(
+            msg
         )
 
     # Copy the QML beside the GeoPackage using the same basename.
@@ -356,8 +374,9 @@ def process_dxf(
     )
 
     if not output_qml.is_file():
+        msg = f"The output QML was not created: {output_qml}"
         raise RuntimeError(
-            f"The output QML was not created: {output_qml}"
+            msg
         )
 
     # Open the result to verify its CRS and feature count.
@@ -377,23 +396,32 @@ def process_dxf(
         )
 
     if not output_layer.isValid():
-        raise RuntimeError(
+        msg = (
             f"The GeoPackage was created but could not be opened: "
             f"{output_gpkg}"
+        )
+        raise RuntimeError(
+            msg
         )
 
     output_feature_count = output_layer.featureCount()
 
     if output_feature_count == 0:
-        raise RuntimeError(
+        msg = (
             f"The GeoPackage was created but contains no chainage points: "
             f"{output_gpkg}"
         )
+        raise RuntimeError(
+            msg
+        )
 
     if output_layer.crs().authid() != SOURCE_CRS:
-        raise RuntimeError(
+        msg = (
             f"The output CRS is {output_layer.crs().authid()}, "
             f"but {SOURCE_CRS} was expected."
+        )
+        raise RuntimeError(
+            msg
         )
 
     if ADD_TO_PROJECT:
@@ -402,9 +430,12 @@ def process_dxf(
         )
 
         if not style_loaded:
-            raise RuntimeError(
+            msg = (
                 f"The layer was created, but the adjacent QML could not "
                 f"be loaded: {style_message}"
+            )
+            raise RuntimeError(
+                msg
             )
 
         QgsProject.instance().addMapLayer(output_layer)
@@ -425,8 +456,9 @@ def process_dxf(
 # ---------------------------------------------------------------------------
 
 if not SOURCE_STYLE_FILE.is_file():
+    msg = f"Source QML style does not exist: {SOURCE_STYLE_FILE}"
     raise FileNotFoundError(
-        f"Source QML style does not exist: {SOURCE_STYLE_FILE}"
+        msg
     )
 
 dxf_files = resolve_input_files(INPUT_FILES)

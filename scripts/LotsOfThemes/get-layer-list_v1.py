@@ -10,7 +10,8 @@ def export_layer_list(group_name, output_file):
     group = root.findGroup(group_name)
 
     if not group:
-        raise Exception(f"Group '{group_name}' not found.")
+        msg = f"Group '{group_name}' not found."
+        raise Exception(msg)
 
     layers = group.findLayers()
     layer_names = sorted([layer.layer().name() for layer in layers])

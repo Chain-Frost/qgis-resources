@@ -22,8 +22,9 @@ installed_fonts = {
 font_key = FONT_FAMILY.casefold()
 
 if font_key not in installed_fonts:
+    msg = f"Font '{FONT_FAMILY}' is not installed or is not visible to QGIS."
     raise RuntimeError(
-        f"Font '{FONT_FAMILY}' is not installed or is not visible to QGIS."
+        msg
     )
 
 resolved_font_family = installed_fonts[font_key]
