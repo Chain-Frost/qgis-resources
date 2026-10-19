@@ -83,6 +83,6 @@ for source_layer in layers:
     source_index = parent_group.children().index(source_node)
     parent_group.insertLayer(source_index + 1, new_layer)
 
-    print(f"EXPORTED: {source_layer.name()}\n" f"  -> {output_path}\n" f"  -> Added to same group with source style")
+    print(f"EXPORTED: {source_layer.name()}\n  -> {output_path}\n  -> Added to same group with source style")
 
 print("Finished.")

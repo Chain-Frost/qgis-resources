@@ -86,7 +86,7 @@ def sanitize_field_names(layer: QgsVectorLayer) -> list[str]:
 
         while candidate.lower() in used:
             suffix_text = str(suffix)
-            candidate = f"{base[:10 - len(suffix_text)]}{suffix_text}"
+            candidate = f"{base[: 10 - len(suffix_text)]}{suffix_text}"
             suffix += 1
 
         used.add(candidate.lower())
@@ -150,26 +150,17 @@ def main() -> None:
         # Explicit transform: this is the important part for reprojection
         options.ct = QgsCoordinateTransform(source_crs, target_crs, project)
 
-        error_code, error_message, new_filename, _new_layer = (
-            QgsVectorFileWriter.writeAsVectorFormatV3(
-                layer,
-                str(out_path),
-                transform_context,
-                options,
-            )
+        error_code, error_message, new_filename, _new_layer = QgsVectorFileWriter.writeAsVectorFormatV3(
+            layer,
+            str(out_path),
+            transform_context,
+            options,
         )
 
         if error_code == QgsVectorFileWriter.NoError:
             written_name = Path(new_filename).name if new_filename else out_path.name
-            reproj_note = (
-                "reprojected"
-                if source_crs != target_crs
-                else "already in target CRS"
-            )
-            print(
-                f"OK   {layer_name} -> {written_name} "
-                f"({source_authid} -> {TARGET_EPSG}, {reproj_note})"
-            )
+            reproj_note = "reprojected" if source_crs != target_crs else "already in target CRS"
+            print(f"OK   {layer_name} -> {written_name} ({source_authid} -> {TARGET_EPSG}, {reproj_note})")
             exported += 1
         else:
             print(f"FAIL {layer_name}: {error_message}")

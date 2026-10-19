@@ -145,7 +145,17 @@ def classify_layer_source(layer: QgsMapLayer) -> tuple[str, Path | None]:
     uri = layer.source() or ""
 
     # Memory / virtual / obvious non-file cases
-    if provider in {"memory", "virtual", "wms", "arcgismapserver", "arcgisfeatureserver", "vectortile", "postgres", "mssql", "oracle"}:
+    if provider in {
+        "memory",
+        "virtual",
+        "wms",
+        "arcgismapserver",
+        "arcgisfeatureserver",
+        "vectortile",
+        "postgres",
+        "mssql",
+        "oracle",
+    }:
         return "remote", None
 
     parts = QgsProviderRegistry.instance().decodeUri(provider, uri) or {}

@@ -15,18 +15,13 @@ REMOVE_DATA_DEFINED_FAMILY_OVERRIDES = True
 
 
 # Confirm that the font is installed and obtain its exact registered name.
-installed_fonts = {
-    family.casefold(): family
-    for family in QFontDatabase.families()
-}
+installed_fonts = {family.casefold(): family for family in QFontDatabase.families()}
 
 font_key = FONT_FAMILY.casefold()
 
 if font_key not in installed_fonts:
     msg = f"Font '{FONT_FAMILY}' is not installed or is not visible to QGIS."
-    raise RuntimeError(
-        msg
-    )
+    raise RuntimeError(msg)
 
 resolved_font_family = installed_fonts[font_key]
 
@@ -120,10 +115,7 @@ if updated_layers:
 iface.mapCanvas().refresh()
 
 
-print(
-    f"Updated {len(updated_layers)} layer(s) "
-    f"to {resolved_font_family}."
-)
+print(f"Updated {len(updated_layers)} layer(s) to {resolved_font_family}.")
 
 for layer_name in updated_layers:
     print(f"  Updated: {layer_name}")

@@ -71,9 +71,7 @@ for layer in project.mapLayers().values():
 
 if not dxf_layers:
     msg = "No loaded DXF layers with line geometry were found."
-    raise RuntimeError(
-        msg
-    )
+    raise RuntimeError(msg)
 
 
 successful: list[Path] = []
@@ -109,9 +107,7 @@ for path_key, line_layers in dxf_layers.items():
         options.driverName = "GPKG"
         options.layerName = output_layer_name
         options.fileEncoding = "UTF-8"
-        options.actionOnExistingFile = (
-            QgsVectorFileWriter.CreateOrOverwriteFile
-        )
+        options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteFile
 
         result = QgsVectorFileWriter.writeAsVectorFormatV3(
             export_layer,
