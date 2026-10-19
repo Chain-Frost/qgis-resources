@@ -48,18 +48,12 @@ jobs:
         run: python -m pyright -p pyrightconfig.json
       - name: Test pure Python logic (QGIS mocked)
         run: python -m pytest scripts/LotsOfThemes/tests scripts/tests -q
-      - name: Preview exception-message cleanup (informational)
+      - name: Ruff lint all repository QGIS Python
+        run: python -m ruff check scripts raster-crs
+      - name: Preview repository-wide Ruff formatting (informational)
         shell: pwsh
         run: |
-          Write-Host "BEGIN_EM_DIFF"
-          python -m ruff check scripts raster-crs --select EM101,EM102 --unsafe-fixes --fix --diff
-          Write-Host "END_EM_DIFF"
+          Write-Host "BEGIN_FORMAT_DIFF"
+          python -m ruff format scripts raster-crs --diff
+          Write-Host "END_FORMAT_DIFF"
           exit 0
-      - name: Report legacy Ruff baseline (informational)
-        shell: pwsh
-        run: |
-          python -m ruff check scripts raster-crs --output-format concise
-          if ($LASTEXITCODE -ne 0) {
-            Write-Host "Legacy scripts have lint debt; new and maintained scripts are gated above."
-            exit 0
-          }
