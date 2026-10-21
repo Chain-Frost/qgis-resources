@@ -15,7 +15,7 @@ from qgis.core import Qgis, QgsFillSymbol, QgsMapLayerStyle, QgsSingleSymbolRend
 from qgis.gui import QgsMapCanvas
 from qgis.utils import iface
 
-STYLE_PATH = Path(__file__).absolute().parents[1] / "styles" / "TUFLOW" / "2d_loc_qa_check.qml"
+STYLE_PATH = Path(__file__).absolute().parents[1] / "styles" / "TUFLOW" / "2d_loc_qa_check_fancy.qml"
 REFRESH_TIMEOUT_SECONDS = 120
 
 
