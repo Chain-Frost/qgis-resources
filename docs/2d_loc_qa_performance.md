@@ -2,7 +2,7 @@
 
 ## Field report
 
-The style in `styles/TUFLOW/2d_loc_qa_check.qml`, optimised by merged
+The style in `styles/TUFLOW/2d_loc_qa_check_fancy.qml`, optimised by merged
 [PR #3](https://github.com/Chain-Frost/qgis-resources/pull/3), took **30–60 seconds
 to apply in QGIS** on 21 October 2026. QGIS appeared to hang but ultimately
 completed. The delay has **not** been reproduced in a controlled benchmark.
@@ -12,6 +12,8 @@ desktop load-and-render benchmark. Do not treat its merge as field validation.
 The style contains eight symbol geometry generators and five rule-based labels
 with generated label positions; a timing report by itself cannot establish
 which component is responsible.
+
+**Note:** This investigation now targets the opt-in `_fancy` style after the classic default was restored in [PR #7](https://github.com/Chain-Frost/qgis-resources/pull/7). Merge PR #7 before attempting this benchmark from this branch; the fancy file is introduced by that PR.
 
 ## Reproduce and isolate the delay
 
